@@ -235,10 +235,11 @@ class AlignedFilter():
         """ Output the counts of filtered items """
         if not self._active:
             return
-        counts = [f"{key} ({getattr(self, f'_{key}'):.2f}): {count}"
-                  for key, count in self._counts.items()
-                  if count > 0]
-        if counts:
+        if counts := [
+            f"{key} ({getattr(self, f'_{key}'):.2f}): {count}"
+            for key, count in self._counts.items()
+            if count > 0
+        ]:
             logger.info("Aligner filtered: (%s)", ", ".join(counts))
 
 

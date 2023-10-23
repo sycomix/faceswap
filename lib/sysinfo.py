@@ -62,12 +62,11 @@ class _SysInfo():  # pylint:disable=too-few-public-methods
     def _is_virtual_env(self) -> bool:
         """ bool: `True` if running inside a virtual environment otherwise ``False``. """
         if not self._is_conda:
-            retval = (hasattr(sys, "real_prefix") or
-                      (hasattr(sys, "base_prefix") and sys.base_prefix != sys.prefix))
-        else:
-            prefix = os.path.dirname(sys.prefix)
-            retval = (os.path.basename(prefix) == "envs")
-        return retval
+            return hasattr(sys, "real_prefix") or (
+                hasattr(sys, "base_prefix") and sys.base_prefix != sys.prefix
+            )
+        prefix = os.path.dirname(sys.prefix)
+        return (os.path.basename(prefix) == "envs")
 
     @property
     def _ram_free(self) -> int:
@@ -132,9 +131,11 @@ class _SysInfo():  # pylint:disable=too-few-public-methods
             stdout, stderr = git.communicate()
         if stderr:
             return "Not Found"
-        branch = stdout.decode(self._encoding,
-                               errors="replace").splitlines()[0].replace("On branch ", "")
-        return branch
+        return (
+            stdout.decode(self._encoding, errors="replace")
+            .splitlines()[0]
+            .replace("On branch ", "")
+        )
 
     @property
     def _git_commits(self) -> str:
@@ -224,7 +225,7 @@ class _SysInfo():  # pylint:disable=too-few-public-methods
                     "gpu_devices_active": ", ".join([f"GPU_{idx}"
                                                      for idx in self._gpu.devices_active])}
         for key in sorted(sys_info.keys()):
-            retval += (f"{key + ':':<20} {sys_info[key]}\n")
+            retval += f"{f'{key}:':<20} {sys_info[key]}\n"
         retval += "\n=============== Pip Packages ===============\n"
         retval += self._installed_pip
         if self._is_conda:
@@ -334,15 +335,16 @@ class _Configs():  # pylint:disable=too-few-public-methods
         """
         formatted = ""
         with open(config_file, "r", encoding="utf-8", errors="replace") as cfile:
-            for line in cfile.readlines():
+            for line in cfile:
                 line = line.strip()
                 if line.startswith("#") or not line:
                     continue
                 item = line.split("=")
-                if len(item) == 1:
-                    formatted += f"\n{item[0].strip()}\n"
-                else:
-                    formatted += self._format_text(item[0], item[1])
+                formatted += (
+                    f"\n{item[0].strip()}\n"
+                    if len(item) == 1
+                    else self._format_text(item[0], item[1])
+                )
         return formatted
 
     def _parse_json(self, config_file: str) -> str:
@@ -381,7 +383,7 @@ class _Configs():  # pylint:disable=too-few-public-methods
         str
             The formatted key value pair for display
         """
-        return f"{key.strip() + ':':<25} {value.strip()}\n"
+        return f"{f'{key.strip()}:':<25} {value.strip()}\n"
 
 
 class _State():  # pylint:disable=too-few-public-methods
@@ -408,10 +410,7 @@ class _State():  # pylint:disable=too-few-public-methods
             The value of the given command line option, if it exists, otherwise ``None``
         """
         cmd = sys.argv
-        for opt in args:
-            if opt in cmd:
-                return cmd[cmd.index(opt) + 1]
-        return None
+        return next((cmd[cmd.index(opt) + 1] for opt in args if opt in cmd), None)
 
     def _get_state_file(self) -> str:
         """ Parses the model's state file and compiles the contents into a human readable string.

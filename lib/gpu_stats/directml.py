@@ -291,11 +291,10 @@ class Device:
         if self.is_software_adapter:
             return False
 
-        if (self.description.VendorId == VendorID.MICROSOFT.value and
-                self.description.DeviceId == 0x8c):
-            return False
-
-        return True
+        return (
+            self.description.VendorId != VendorID.MICROSOFT.value
+            or self.description.DeviceId != 0x8C
+        )
 
 
 class Adapters():  # pylint:disable=too-few-public-methods
@@ -402,8 +401,7 @@ class Adapters():  # pylint:disable=too-few-public-methods
         args: Any
             The arguments to pass to the adaptor function
         """
-        check = func(*args)
-        if check:
+        if check := func(*args):
             self._log("debug", f"Failed HRESULT for func {func}({args}): "
                                f"{hex(ctypes.c_ulong(check).value)}")
 
@@ -510,8 +508,7 @@ class DirectML(_GPUStats):
             The list of device indices that are available for Faceswap to use
         """
         devices = super()._get_active_devices()
-        env_devices = os.environ.get("DML_VISIBLE_DEVICES")
-        if env_devices:
+        if env_devices := os.environ.get("DML_VISIBLE_DEVICES"):
             new_devices = [int(i) for i in env_devices.split(",")]
             devices = [idx for idx in devices if idx in new_devices]
         self._log("debug", f"Active GPU Devices: {devices}")

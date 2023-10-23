@@ -203,10 +203,9 @@ class FaceswapControl():
         if self.command == "effmpeg" and self.capture_ffmpeg(output):
             return True
 
-        if self.command not in ("train", "effmpeg") and self.capture_tqdm(output):
-            return True
-
-        return False
+        return bool(
+            self.command not in ("train", "effmpeg") and self.capture_tqdm(output)
+        )
 
     def _process_training_stdout(self, output: str) -> None:
         """ Process any triggers that are required to update the GUI when Faceswap is running a
@@ -312,7 +311,7 @@ class FaceswapControl():
             return False
 
         loss = self.consoleregex["loss"].findall(string)
-        if len(loss) != 2 or not all(len(itm) == 3 for itm in loss):
+        if len(loss) != 2 or any(len(itm) != 3 for itm in loss):
             logger.trace("Not loss message. Returning False")
             return False
 
@@ -385,9 +384,7 @@ class FaceswapControl():
             logger.trace("Not ffmpeg message. Returning False")
             return False
 
-        message = ""
-        for item in ffmpeg:
-            message += f"{item[0]}: {item[1]}  "
+        message = "".join(f"{item[0]}: {item[1]}  " for item in ffmpeg)
         if not message:
             logger.trace("Error creating ffmpeg message. Returning False")
             return False

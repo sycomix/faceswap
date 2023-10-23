@@ -82,9 +82,7 @@ class _GuiSession():  # pylint:disable=too-few-public-methods
     @property
     def _stored_tab_name(self):
         """str: The tab_name stored in :attr:`_options` or ``None`` if it does not exist """
-        if self._options is None:
-            return None
-        return self._options.get("tab_name", None)
+        return None if self._options is None else self._options.get("tab_name", None)
 
     @property
     def _selected_to_choices(self):
@@ -342,11 +340,10 @@ class _GuiSession():  # pylint:disable=too-few-public-methods
             logger.debug("Loading config")
             self._options = self._serializer.load(self._filename)
             self._check_valid_choices()
-            retval = True
+            return True
         else:
             logger.debug("File doesn't exist. Aborting")
-            retval = False
-        return retval
+            return False
 
     def _check_valid_choices(self):
         """ Check whether the loaded file has any selected combo/radio/multi-option values that are
@@ -436,9 +433,11 @@ class Tasks(_GuiSession):
     @property
     def _is_project(self):
         """ str: ``True`` if all tasks are from an overarching session project else ``False``."""
-        retval = False if not self._tasks else all(v.get("is_project", False)
-                                                   for v in self._tasks.values())
-        return retval
+        return (
+            False
+            if not self._tasks
+            else all(v.get("is_project", False) for v in self._tasks.values())
+        )
 
     @property
     def _project_filename(self):
@@ -785,8 +784,7 @@ class Project(_GuiSession):
     def _update_tasks(self):
         """ Add the tasks from the loaded project to the :class:`Tasks` class. """
         for key, val in self._cli_options.items():
-            opts = {key: val}
-            opts["tab_name"] = key
+            opts = {key: val, "tab_name": key}
             self._tasks.add_project_task(self._filename, key, opts)
 
     def reload(self, *args):  # pylint:disable=unused-argument

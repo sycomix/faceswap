@@ -84,7 +84,7 @@ class SessionPopUp(tk.Toplevel):
         super().__init__()
         self._thread: Optional[LongRunningTask] = None  # Thread for loading data in background
         self._default_view = "avg" if data_points > 1000 else "smoothed"
-        self._session_id = None if session_id == "Total" else int(session_id)
+        self._session_id = None if session_id == "Total" else session_id
 
         self._graph_frame = ttk.Frame(self)
         self._graph: Optional[SessionGraph] = None
@@ -349,7 +349,7 @@ class SessionPopUp(tk.Toplevel):
         logger.debug("Saving to: %s", savefile)
         assert self._display_data is not None
         save_data = self._display_data.stats
-        fieldnames = sorted(key for key in save_data.keys())
+        fieldnames = sorted(iter(save_data.keys()))
 
         with savefile as outfile:
             csvout = csv.writer(outfile, delimiter=",")
@@ -509,9 +509,7 @@ class SessionPopUp(tk.Toplevel):
         display = self._vars.display.get().lower()
         logger.debug("Validating selection. (loss_keys: %s, selections: %s, display: %s)",
                      loss_keys, selections, display)
-        if not selections or (display == "loss" and not loss_keys):
-            return False
-        return True
+        return bool(selections and (display != "loss" or loss_keys))
 
     def _check_valid_data(self) -> bool:
         """ Check that the selections holds valid data to display
@@ -525,10 +523,7 @@ class SessionPopUp(tk.Toplevel):
         assert self._display_data is not None
         logger.debug("Validating data. %s",
                      {key: len(val) for key, val in self._display_data.stats.items()})
-        if any(len(val) == 0  # pylint:disable=len-as-condition
-               for val in self._display_data.stats.values()):
-            return False
-        return True
+        return all(len(val) != 0 for val in self._display_data.stats.values())
 
     def _selections_to_list(self) -> List[str]:
         """ Compile checkbox selections to a list.

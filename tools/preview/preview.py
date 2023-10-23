@@ -312,10 +312,11 @@ class Samples():
     @property
     def available_masks(self) -> List[str]:
         """ list: The mask names that are available for every face in the alignments file """
-        retval = [key
-                  for key, val in self.alignments.mask_summary.items()
-                  if val == self.alignments.faces_count]
-        return retval
+        return [
+            key
+            for key, val in self.alignments.mask_summary.items()
+            if val == self.alignments.faces_count
+        ]
 
     @property
     def sample_size(self) -> int:
@@ -641,12 +642,10 @@ class Patch():  # pylint:disable=too-few-public-methods
         logger.debug("Patching faces")
         self._converter.process(queue_in, queue_out)
         swapped = []
-        idx = 0
-        while idx < sample_size:
+        for idx in range(sample_size):
             logger.debug("Patching image %s of %s", idx + 1, sample_size)
             item = queue_out.get()
             swapped.append(item[1])
             logger.debug("Patched image %s of %s", idx + 1, sample_size)
-            idx += 1
         logger.debug("Patched faces")
         return swapped

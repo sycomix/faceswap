@@ -91,17 +91,21 @@ class AMDStats(_GPUStats):
     def _experimental_indices(self) -> List[int]:
         """ list: The indices corresponding to :attr:`_ids` of GPU devices marked as
         "experimental". """
-        retval = [idx for idx, device in enumerate(self._all_devices)
-                  if device not in self._supported_indices]
-        return retval
+        return [
+            idx
+            for idx, device in enumerate(self._all_devices)
+            if device not in self._supported_indices
+        ]
 
     @property
     def _supported_indices(self) -> List[int]:
         """ list: The indices corresponding to :attr:`_ids` of GPU devices marked as
         "supported". """
-        retval = [idx for idx, device in enumerate(self._all_devices)
-                  if device in self._supported_devices]
-        return retval
+        return [
+            idx
+            for idx, device in enumerate(self._all_devices)
+            if device in self._supported_devices
+        ]
 
     @property
     def _all_vram(self) -> List[int]:

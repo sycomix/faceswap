@@ -37,16 +37,20 @@ class PreviewArgs(FaceSwapArgs):
         list[dict[str, Any]]
             Top command line options for the preview tool
         """
-        argument_list = []
-        argument_list.append(dict(
-            opts=("-i", "--input-dir"),
-            action=DirOrFileFullPaths,
-            filetypes="video",
-            dest="input_dir",
-            group=_("data"),
-            required=True,
-            help=_("Input directory or video. Either a directory containing the image files you "
-                   "wish to process or path to a video file.")))
+        argument_list = [
+            dict(
+                opts=("-i", "--input-dir"),
+                action=DirOrFileFullPaths,
+                filetypes="video",
+                dest="input_dir",
+                group=_("data"),
+                required=True,
+                help=_(
+                    "Input directory or video. Either a directory containing the image files you "
+                    "wish to process or path to a video file."
+                ),
+            )
+        ]
         argument_list.append(dict(
             opts=("-al", "--alignments"),
             action=FileFullPaths,

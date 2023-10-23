@@ -227,20 +227,20 @@ class Filter():
     @property
     def embeddings(self) -> np.ndarray:
         """ :class:`numpy.ndarray`: The filter embeddings"""
-        if self._embeddings and all(np.any(e) for e in self._embeddings):
-            retval = np.concatenate(self._embeddings, axis=0)
-        else:
-            retval = np.array([])
-        return retval
+        return (
+            np.concatenate(self._embeddings, axis=0)
+            if self._embeddings and all(np.any(e) for e in self._embeddings)
+            else np.array([])
+        )
 
     @property
     def n_embeddings(self) -> np.ndarray:
         """ :class:`numpy.ndarray`: The n-filter embeddings"""
-        if self._nembeddings and all(np.any(e) for e in self._nembeddings):
-            retval = np.concatenate(self._nembeddings, axis=0)
-        else:
-            retval = np.array([])
-        return retval
+        return (
+            np.concatenate(self._nembeddings, axis=0)
+            if self._nembeddings and all(np.any(e) for e in self._nembeddings)
+            else np.array([])
+        )
 
     @classmethod
     def _files_from_folder(cls, input_location: List[str]) -> List[str]:
@@ -306,8 +306,8 @@ class Filter():
 
         filters = retval[0]
         nfilters = retval[1]
-        f_fnames = set(os.path.basename(fname) for fname in filters)
-        n_fnames = set(os.path.basename(fname) for fname in nfilters)
+        f_fnames = {os.path.basename(fname) for fname in filters}
+        n_fnames = {os.path.basename(fname) for fname in nfilters}
         if f_fnames.intersection(n_fnames):
             error = True
             logger.warning("filter and nfilter filenames should be unique. The following "
@@ -398,7 +398,7 @@ class Filter():
             embeddings.pop(idx)
             return
 
-        if len(item.detected_faces) > 1 and not is_filter:
+        if len(item.detected_faces) > 1:
             logger.warning("%s faces detected for nfilter in '%s'. All of these identies will be "
                            "used", len(item.detected_faces), os.path.basename(item.filename))
             embeddings[idx] = identities

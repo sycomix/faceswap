@@ -34,9 +34,7 @@ class KBHit:
     """ Creates a KBHit object that you can call to do various keyboard things. """
     def __init__(self, is_gui=False):
         self.is_gui = is_gui
-        if os.name == "nt" or self.is_gui or not sys.stdout.isatty():
-            pass
-        else:
+        if os.name != "nt" and not self.is_gui and sys.stdout.isatty():
             # Save the terminal settings
             self.file_desc = sys.stdin.fileno()
             self.new_term = termios.tcgetattr(self.file_desc)
@@ -51,9 +49,7 @@ class KBHit:
 
     def set_normal_term(self):
         """ Resets to normal terminal.  On Windows this is a no-op. """
-        if os.name == "nt" or self.is_gui or not sys.stdout.isatty():
-            pass
-        else:
+        if os.name != "nt" and not self.is_gui and sys.stdout.isatty():
             termios.tcsetattr(self.file_desc, termios.TCSAFLUSH, self.old_term)
 
     def getch(self):

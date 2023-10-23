@@ -126,16 +126,15 @@ class Environment():
     def is_virtualenv(self) -> bool:
         """ Check whether this is a virtual environment """
         if not self.is_conda:
-            retval = (hasattr(sys, "real_prefix") or
-                      (hasattr(sys, "base_prefix") and sys.base_prefix != sys.prefix))
-        else:
-            prefix = os.path.dirname(sys.prefix)
-            retval = (os.path.basename(prefix) == "envs")
-        return retval
+            return hasattr(sys, "real_prefix") or (
+                hasattr(sys, "base_prefix") and sys.base_prefix != sys.prefix
+            )
+        prefix = os.path.dirname(sys.prefix)
+        return (os.path.basename(prefix) == "envs")
 
     def _process_arguments(self) -> None:
         """ Process any cli arguments and dummy in cli arguments if calling from updater. """
-        args = [arg for arg in sys.argv]  # pylint:disable=unnecessary-comprehension
+        args = list(sys.argv)
         if self.updater:
             from lib.utils import get_backend  # pylint:disable=import-outside-toplevel
             args.append(f"--{get_backend()}")
@@ -163,7 +162,11 @@ class Environment():
             logger.info("The tool provides tips for installation and installs required python "
                         "packages")
         logger.info("Setup in %s %s", self.os_version[0], self.os_version[1])
-        if not self.updater and not self.os_version[0] in ["Windows", "Linux", "Darwin"]:
+        if not self.updater and self.os_version[0] not in [
+            "Windows",
+            "Linux",
+            "Darwin",
+        ]:
             logger.error("Your system %s is not supported!", self.os_version[0])
             sys.exit(1)
         if self.os_version[0].lower() == "darwin" and platform.machine() == "arm64":
@@ -213,8 +216,15 @@ class Environment():
         if not self.is_conda:
             # Don't do this with Conda, as we must use Conda version of pip
             logger.info("Upgrading pip...")
-            pipexe = [sys.executable, "-m", "pip"]
-            pipexe.extend(["install", "--no-cache-dir", "-qq", "--upgrade"])
+            pipexe = [
+                sys.executable,
+                "-m",
+                "pip",
+                "install",
+                "--no-cache-dir",
+                "-qq",
+                "--upgrade",
+            ]
             if not self.is_admin and not self.is_virtualenv:
                 pipexe.append("--user")
             pipexe.append("pip")
@@ -334,12 +344,15 @@ class Packages():
             [pkg for pkg, plat in _INSTALLER_REQUIREMENTS
              if self._env.os_version[0] == plat or (plat[0] == "!" and
                                                     self._env.os_version[0] != plat[1:])])
-        retval = [(pkg, spec) for pkg, spec in candidates
-                  if pkg not in all_installed or (
-                    pkg in all_installed and
-                    not self._validate_spec(spec, all_installed.get(pkg, ""))
-                  )]
-        return retval
+        return [
+            (pkg, spec)
+            for pkg, spec in candidates
+            if pkg not in all_installed
+            or (
+                pkg in all_installed
+                and not self._validate_spec(spec, all_installed.get(pkg, ""))
+            )
+        ]
 
     @property
     def packages_need_install(self) -> bool:
@@ -387,11 +400,11 @@ class Packages():
         bool
             ``True`` if the required specification is met by the existing specification
         """
-        ops = {"==": operator.eq, ">=": operator.ge, "<=": operator.le,
-               ">": operator.gt, "<": operator.lt}
         if not required:
             return True
 
+        ops = {"==": operator.eq, ">=": operator.ge, "<=": operator.le,
+               ">": operator.gt, "<": operator.lt}
         return all(ops[spec[0]]([int(s) for s in existing.split(".")],
                                 [int(s) for s in spec[1].split(".")])
                    for spec in required)
@@ -445,7 +458,7 @@ class Packages():
         for req_file in req_files:
             requirements_file = os.path.join(pypath, "requirements", req_file)
             with open(requirements_file, encoding="utf8") as req:
-                for package in req.readlines():
+                for package in req:
                     package = package.strip()
                     if package and (not package.startswith(("#", "-r"))):
                         requirements.append(package)
@@ -574,9 +587,9 @@ class Packages():
                 self._missing_packages.append((key, specs))
 
         for priority in reversed(_PRIORITY):
-            # Put priority packages at beginning of list
-            package = next((pkg for pkg in self._missing_packages if pkg[0] == priority), None)
-            if package:
+            if package := next(
+                (pkg for pkg in self._missing_packages if pkg[0] == priority), None
+            ):
                 idx = self._missing_packages.index(package)
                 self._missing_packages.insert(0, self._missing_packages.pop(idx))
         logger.debug(self._missing_packages)
@@ -742,9 +755,6 @@ class Checks():  # pylint:disable=too-few-public-methods
         global _INSTALL_FAILED  # pylint:disable=global-statement
         check = ROCmCheck()
 
-        str_min = ".".join(str(v) for v in check.version_min)
-        str_max = ".".join(str(v) for v in check.version_max)
-
         if check.is_valid:
             self._env.rocm_version = check.rocm_version
             logger.info("ROCm version: %s", ".".join(str(v) for v in self._env.rocm_version))
@@ -753,6 +763,9 @@ class Checks():  # pylint:disable=too-few-public-methods
                 msg = f"Incompatible ROCm version: {'.'.join(str(v) for v in check.rocm_version)}"
             else:
                 msg = "ROCm not found"
+            str_min = ".".join(str(v) for v in check.version_min)
+            str_max = ".".join(str(v) for v in check.version_max)
+
             logger.error("%s.\n"
                          "A compatible version of ROCm must be installed to proceed.\n"
                          "ROCm versions between %s and %s are supported.\n"
@@ -819,7 +832,7 @@ class CudaCheck():  # pylint:disable=too-few-public-methods
         self._cudnn_header_files: List[str] = ["cudnn_version.h", "cudnn.h"]
         logger.debug("cuda keys: %s, cudnn header files: %s",
                      self._cuda_keys, self._cudnn_header_files)
-        if self._os in ("windows", "linux"):
+        if self._os in {"windows", "linux"}:
             self._cuda_check()
             self._cudnn_check()
 
@@ -838,8 +851,7 @@ class CudaCheck():  # pylint:disable=too-few-public-methods
             if version is not None:
                 self.cuda_version = version.groupdict().get("cuda", None)
             locate = "where" if self._os == "windows" else "which"
-            path = os.popen(f"{locate} nvcc").read()
-            if path:
+            if path := os.popen(f"{locate} nvcc").read():
                 path = path.split("\n")[0]  # Split multiple entries and take first found
                 while True:  # Get Cuda root folder
                     path, split = os.path.split(path)
@@ -921,8 +933,7 @@ class CudaCheck():  # pylint:disable=too-few-public-methods
 
         cudnn_path = os.path.realpath(chk[chk.find("=>") + 3:chk.find("libcudnn") - 1])
         cudnn_path = cudnn_path.replace("lib", "include")
-        cudnn_checkfiles = [os.path.join(cudnn_path, header) for header in header_files]
-        return cudnn_checkfiles
+        return [os.path.join(cudnn_path, header) for header in header_files]
 
     def _get_checkfiles_windows(self) -> List[str]:
         """ Return the check-file locations for Windows. Just looks inside the include folder of
@@ -937,8 +948,7 @@ class CudaCheck():  # pylint:disable=too-few-public-methods
         if not self.cuda_path:
             return []
         scandir = os.path.join(self.cuda_path, "include")
-        cudnn_checkfiles = [os.path.join(scandir, header) for header in self._cudnn_header_files]
-        return cudnn_checkfiles
+        return [os.path.join(scandir, header) for header in self._cudnn_header_files]
 
 
 class Install():  # pylint:disable=too-few-public-methods
@@ -1117,7 +1127,7 @@ class Install():  # pylint:disable=too-few-public-methods
             # conda-forge, but fail tensorflow itself so that it can be handled by pip.
             specs = Requirement.parse(package).specs
             for key, val in _TENSORFLOW_REQUIREMENTS.items():
-                req_specs = Requirement.parse("foobar" + key).specs
+                req_specs = Requirement.parse(f"foobar{key}").specs
                 if all(item in req_specs for item in specs):
                     cuda, cudnn = val
                     break
@@ -1134,13 +1144,13 @@ class Install():  # pylint:disable=too-few-public-methods
         installer = self._installer(self._env, clean_pkg, condaexe, self._is_gui)
         retcode = installer()
 
-        if retcode != 0 and not conda_only:
-            logger.info("%s not available in Conda. Installing with pip", package)
-        elif retcode != 0:
-            logger.warning("Couldn't install %s with Conda. Please install this package "
-                           "manually", package)
-        success = retcode == 0 and success
-        return success
+        if retcode != 0:
+            if conda_only:
+                logger.warning("Couldn't install %s with Conda. Please install this package "
+                               "manually", package)
+            else:
+                logger.info("%s not available in Conda. Installing with pip", package)
+        return retcode == 0 and success
 
     def _from_pip(self, package: str) -> None:
         """ Install a pip package
@@ -1285,17 +1295,17 @@ class PexpectInstaller(Installer):  # pylint: disable=too-few-public-methods
         while True:
             try:
                 idx = proc.expect(["\r\n", "\r"])
-                line = proc.before.rstrip()
-                if line and idx == 0:
-                    if self._last_line_cr:
-                        self._last_line_cr = False
-                        # Output last line of progress bar and go to next line
-                        self._non_gui_print(line)
-                    self._seen_line_log(line)
-                elif line and idx == 1:
-                    self._last_line_cr = True
-                    logger.debug(line)
-                    self._non_gui_print(line, end="\r")
+                if line := proc.before.rstrip():
+                    if idx == 0:
+                        if self._last_line_cr:
+                            self._last_line_cr = False
+                            # Output last line of progress bar and go to next line
+                            self._non_gui_print(line)
+                        self._seen_line_log(line)
+                    elif idx == 1:
+                        self._last_line_cr = True
+                        logger.debug(line)
+                        self._non_gui_print(line, end="\r")
             except pexpect.EOF:
                 break
         proc.close()

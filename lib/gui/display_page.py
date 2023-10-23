@@ -145,14 +145,14 @@ class DisplayPage(ttk.Frame):  # pylint: disable=too-many-ancestors
             subnotebook frame """
         logger.debug("Getting subnotebook widgets")
         for child in self.subnotebook.winfo_children():
-            for widget in child.winfo_children():
-                yield widget
+            yield from child.winfo_children()
 
     def subnotebook_get_titles_ids(self):
         """ Return tabs ids and titles """
-        tabs = {}
-        for tab_id in range(0, self.subnotebook.index("end")):
-            tabs[self.subnotebook.tab(tab_id, "text")] = tab_id
+        tabs = {
+            self.subnotebook.tab(tab_id, "text"): tab_id
+            for tab_id in range(0, self.subnotebook.index("end"))
+        }
         logger.debug(tabs)
         return tabs
 

@@ -59,9 +59,10 @@ class Viewport():
         type (`polygon` or `line`), value are the keyword arguments for that type. """
         state = "normal" if self._canvas.optional_annotations["mesh"] else "hidden"
         color = self._canvas.control_colors["Mesh"]
-        kwargs = dict(polygon=dict(fill="", outline=color, state=state),
-                      line=dict(fill=color, state=state))
-        return kwargs
+        return dict(
+            polygon=dict(fill="", outline=color, state=state),
+            line=dict(fill=color, state=state),
+        )
 
     @property
     def hover_box(self):
@@ -228,17 +229,22 @@ class Viewport():
         key = "_".join([str(frame_index), str(face_index)])
         if key not in self._tk_faces or is_active:
             logger.trace("creating new tk_face: (key: %s, is_active: %s)", key, is_active)
-            if is_active:
-                image = AlignedFace(face.landmarks_xy,
-                                    image=self._active_frame.current_frame,
-                                    centering=self._centering,
-                                    size=self.face_size).face
-            else:
-                image = AlignedFace(face.landmarks_xy,
-                                    image=cv2.imdecode(face.thumbnail, cv2.IMREAD_UNCHANGED),
-                                    centering=self._centering,
-                                    size=self.face_size,
-                                    is_aligned=True).face
+            image = (
+                AlignedFace(
+                    face.landmarks_xy,
+                    image=self._active_frame.current_frame,
+                    centering=self._centering,
+                    size=self.face_size,
+                ).face
+                if is_active
+                else AlignedFace(
+                    face.landmarks_xy,
+                    image=cv2.imdecode(face.thumbnail, cv2.IMREAD_UNCHANGED),
+                    centering=self._centering,
+                    size=self.face_size,
+                    is_aligned=True,
+                ).face
+            )
             tk_face = self._get_tk_face_object(face, image, is_active)
             self._tk_faces[key] = tk_face
         else:

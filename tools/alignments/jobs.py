@@ -133,7 +133,7 @@ class Check():
         action = self._job.replace("-", "_")
         processor = getattr(self, f"_get_{action}")
         logger.debug("Processor: %s", processor)
-        return [item for item in processor()]  # pylint:disable=unnecessary-comprehension
+        return list(processor())
 
     def _get_no_faces(self) -> Generator[str, None, None]:
         """ yield each frame that has no face match in alignments file
@@ -163,8 +163,7 @@ class Check():
             The frame name of any frames which have multiple faces and potentially the face id
         """
         process_type = getattr(self, f"_get_multi_faces_{self._type}")
-        for item in process_type():
-            yield item
+        yield from process_type()
 
     def _get_multi_faces_frames(self) -> Generator[str, None, None]:
         """ Return Frames that contain multiple faces
@@ -212,7 +211,7 @@ class Check():
             The frame name of any frames missing alignments
         """
         self.output_message = "Frames missing from alignments file"
-        exclude_filetypes = set(["yaml", "yml", "p", "json", "txt"])
+        exclude_filetypes = {"yaml", "yml", "p", "json", "txt"}
         for frame in tqdm(cast(Dict[str, str], self._items),
                           desc=self.output_message,
                           leave=False):
@@ -231,7 +230,10 @@ class Check():
             The frame name of any frames in alignments with no matching file
         """
         self.output_message = "Missing frames that are in alignments file"
-        frames = set(item["frame_fullname"] for item in cast(List[Dict[str, str]], self._items))
+        frames = {
+            item["frame_fullname"]
+            for item in cast(List[Dict[str, str]], self._items)
+        }
         for frame in tqdm(self._alignments.data.keys(), desc=self.output_message, leave=False):
             if frame not in frames:
                 logger.debug("Returning: '%s'", frame)
@@ -392,8 +394,7 @@ class Sort():
     def process(self) -> None:
         """ Execute the sort process """
         logger.info("[SORT INDEXES]")  # Tidy up cli output
-        reindexed = self.reindex_faces()
-        if reindexed:
+        if reindexed := self.reindex_faces():
             self._alignments.save()
             logger.warning("If you have a face-set corresponding to the alignment file you "
                            "processed then you should run the 'Extract' job to regenerate it.")

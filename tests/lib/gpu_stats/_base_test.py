@@ -57,8 +57,7 @@ def fixture__gpu_stats_instance(mocker: pytest_mock.MockerFixture) -> _GPUStats:
     mocker.patch.object(_GPUStats, '_get_device_names', return_value=_DummyData.device_names)
     mocker.patch.object(_GPUStats, '_get_vram', return_value=_DummyData.vram)
     mocker.patch.object(_GPUStats, '_get_free_vram', return_value=_DummyData.free_vram)
-    gpu_stats = _GPUStats()
-    return gpu_stats
+    return _GPUStats()
 
 
 def test__gpu_stats_init_(gpu_stats_instance: _GPUStats) -> None:

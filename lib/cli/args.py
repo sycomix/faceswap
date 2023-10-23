@@ -74,19 +74,19 @@ class SmartFormatter(argparse.HelpFormatter):
         list
             A list of split strings
         """
-        if text.startswith("R|"):
-            text = self._whitespace_matcher_limited.sub(' ', text).strip()[2:]
-            output = []
-            for txt in text.splitlines():
-                indent = ""
-                if txt.startswith("L|"):
-                    indent = "    "
-                    txt = f"  - {txt[2:]}"
-                output.extend(textwrap.wrap(txt, width, subsequent_indent=indent))
-            return output
-        return argparse.HelpFormatter._split_lines(self,  # pylint: disable=protected-access
-                                                   text,
-                                                   width)
+        if not text.startswith("R|"):
+            return argparse.HelpFormatter._split_lines(self,  # pylint: disable=protected-access
+                                                       text,
+                                                       width)
+        text = self._whitespace_matcher_limited.sub(' ', text).strip()[2:]
+        output = []
+        for txt in text.splitlines():
+            indent = ""
+            if txt.startswith("L|"):
+                indent = "    "
+                txt = f"  - {txt[2:]}"
+            output.extend(textwrap.wrap(txt, width, subsequent_indent=indent))
+        return output
 
 
 class FaceSwapArgs():
@@ -195,44 +195,58 @@ class FaceSwapArgs():
                        "correspond to any GPU(s) that you do not wish to be made available to "
                        "Faceswap. Selecting all GPUs here will force Faceswap into CPU mode."
                        "\nL|{}").format(" \nL|".join(_GPUS))))
-        global_args.append(dict(
-            opts=("-C", "--configfile"),
-            action=FileFullPaths,
-            filetypes="ini",
-            type=str,
-            group=_("Global Options"),
-            help=_("Optionally overide the saved config with the path to a custom config file.")))
-        global_args.append(dict(
-            opts=("-L", "--loglevel"),
-            type=str.upper,
-            dest="loglevel",
-            default="INFO",
-            choices=("INFO", "VERBOSE", "DEBUG", "TRACE"),
-            group=_("Global Options"),
-            help=_("Log level. Stick with INFO or VERBOSE unless you need to file an error "
-                   "report. Be careful with TRACE as it will generate a lot of data")))
-        global_args.append(dict(
-            opts=("-LF", "--logfile"),
-            action=SaveFileFullPaths,
-            filetypes='log',
-            type=str,
-            dest="logfile",
-            default=None,
-            group=_("Global Options"),
-            help=_("Path to store the logfile. Leave blank to store in the faceswap folder")))
-        # These are hidden arguments to indicate that the GUI/Colab is being used
-        global_args.append(dict(
-            opts=("-gui", "--gui"),
-            action="store_true",
-            dest="redirect_gui",
-            default=False,
-            help=argparse.SUPPRESS))
-        global_args.append(dict(
-            opts=("-colab", "--colab"),
-            action="store_true",
-            dest="colab",
-            default=False,
-            help=argparse.SUPPRESS))
+        global_args.extend(
+            (
+                dict(
+                    opts=("-C", "--configfile"),
+                    action=FileFullPaths,
+                    filetypes="ini",
+                    type=str,
+                    group=_("Global Options"),
+                    help=_(
+                        "Optionally overide the saved config with the path to a custom config file."
+                    ),
+                ),
+                dict(
+                    opts=("-L", "--loglevel"),
+                    type=str.upper,
+                    dest="loglevel",
+                    default="INFO",
+                    choices=("INFO", "VERBOSE", "DEBUG", "TRACE"),
+                    group=_("Global Options"),
+                    help=_(
+                        "Log level. Stick with INFO or VERBOSE unless you need to file an error "
+                        "report. Be careful with TRACE as it will generate a lot of data"
+                    ),
+                ),
+                dict(
+                    opts=("-LF", "--logfile"),
+                    action=SaveFileFullPaths,
+                    filetypes='log',
+                    type=str,
+                    dest="logfile",
+                    default=None,
+                    group=_("Global Options"),
+                    help=_(
+                        "Path to store the logfile. Leave blank to store in the faceswap folder"
+                    ),
+                ),
+                dict(
+                    opts=("-gui", "--gui"),
+                    action="store_true",
+                    dest="redirect_gui",
+                    default=False,
+                    help=argparse.SUPPRESS,
+                ),
+                dict(
+                    opts=("-colab", "--colab"),
+                    action="store_true",
+                    dest="colab",
+                    default=False,
+                    help=argparse.SUPPRESS,
+                ),
+            )
+        )
         return global_args
 
     @staticmethod
@@ -256,12 +270,13 @@ class FaceSwapArgs():
         :class:`~lib.cli.args.FullHelpArgumentParser`
             The parser for the given command
         """
-        parser = subparser.add_parser(command,
-                                      help=description,
-                                      description=description,
-                                      epilog="Questions and feedback: https://faceswap.dev/forum",
-                                      formatter_class=SmartFormatter)
-        return parser
+        return subparser.add_parser(
+            command,
+            help=description,
+            description=description,
+            epilog="Questions and feedback: https://faceswap.dev/forum",
+            formatter_class=SmartFormatter,
+        )
 
     def _add_arguments(self) -> None:
         """ Parse the list of dictionaries containing the command line arguments and convert to
@@ -310,17 +325,21 @@ class ExtractConvertArgs(FaceSwapArgs):
         list
             The list of command line options for the given Extract and Convert
         """
-        argument_list: List[Dict[str, Any]] = []
-        argument_list.append(dict(
-            opts=("-i", "--input-dir"),
-            action=DirOrFileFullPaths,
-            filetypes="video",
-            dest="input_dir",
-            required=True,
-            group=_("Data"),
-            help=_("Input directory or video. Either a directory containing the image files you "
-                   "wish to process or path to a video file. NB: This should be the source video/"
-                   "frames NOT the source faces.")))
+        argument_list: List[Dict[str, Any]] = [
+            dict(
+                opts=("-i", "--input-dir"),
+                action=DirOrFileFullPaths,
+                filetypes="video",
+                dest="input_dir",
+                required=True,
+                group=_("Data"),
+                help=_(
+                    "Input directory or video. Either a directory containing the image files you "
+                    "wish to process or path to a video file. NB: This should be the source video/"
+                    "frames NOT the source faces."
+                ),
+            )
+        ]
         argument_list.append(dict(
             opts=("-o", "--output-dir"),
             action=DirFullPaths,
@@ -377,16 +396,20 @@ class ExtractArgs(ExtractConvertArgs):
             default_detector = "s3fd"
             default_aligner = "fan"
 
-        argument_list: List[Dict[str, Any]] = []
-        argument_list.append(dict(
-            opts=("-b", "--batch-mode"),
-            action="store_true",
-            dest="batch_mode",
-            default=False,
-            group=_("Data"),
-            help=_("R|If selected then the input_dir should be a parent folder containing "
-                   "multiple videos and/or folders of images you wish to extract from. The faces "
-                   "will be output to separate sub-folders in the output_dir.")))
+        argument_list: List[Dict[str, Any]] = [
+            dict(
+                opts=("-b", "--batch-mode"),
+                action="store_true",
+                dest="batch_mode",
+                default=False,
+                group=_("Data"),
+                help=_(
+                    "R|If selected then the input_dir should be a parent folder containing "
+                    "multiple videos and/or folders of images you wish to extract from. The faces "
+                    "will be output to separate sub-folders in the output_dir."
+                ),
+            )
+        ]
         argument_list.append(dict(
             opts=("-D", "--detector"),
             action=Radio,
@@ -667,17 +690,21 @@ class ConvertArgs(ExtractConvertArgs):
             The list of optional command line options for the Convert command
         """
 
-        argument_list: List[Dict[str, Any]] = []
-        argument_list.append(dict(
-            opts=("-ref", "--reference-video"),
-            action=FileFullPaths,
-            filetypes="video",
-            type=str,
-            dest="reference_video",
-            group=_("Data"),
-            help=_("Only required if converting from images to video. Provide The original video "
-                   "that the source frames were extracted from (for extracting the fps and "
-                   "audio).")))
+        argument_list: List[Dict[str, Any]] = [
+            dict(
+                opts=("-ref", "--reference-video"),
+                action=FileFullPaths,
+                filetypes="video",
+                type=str,
+                dest="reference_video",
+                group=_("Data"),
+                help=_(
+                    "Only required if converting from images to video. Provide The original video "
+                    "that the source frames were extracted from (for extracting the fps and "
+                    "audio)."
+                ),
+            )
+        ]
         argument_list.append(dict(
             opts=("-m", "--model-dir"),
             action=DirFullPaths,
@@ -923,16 +950,20 @@ class TrainArgs(FaceSwapArgs):
         list
             The list of command line options for training
         """
-        argument_list: List[Dict[str, Any]] = []
-        argument_list.append(dict(
-            opts=("-A", "--input-A"),
-            action=DirFullPaths,
-            dest="input_a",
-            required=True,
-            group=_("faces"),
-            help=_("Input directory. A directory containing training images for face A. This is "
-                   "the original face, i.e. the face that you want to remove and replace with "
-                   "face B.")))
+        argument_list: List[Dict[str, Any]] = [
+            dict(
+                opts=("-A", "--input-A"),
+                action=DirFullPaths,
+                dest="input_a",
+                required=True,
+                group=_("faces"),
+                help=_(
+                    "Input directory. A directory containing training images for face A. This is "
+                    "the original face, i.e. the face that you want to remove and replace with "
+                    "face B."
+                ),
+            )
+        ]
         argument_list.append(dict(
             opts=("-B", "--input-B"),
             action=DirFullPaths,
@@ -1188,11 +1219,13 @@ class GuiArgs(FaceSwapArgs):
         list
             The list of command line options for the GUI
         """
-        argument_list: List[Dict[str, Any]] = []
-        argument_list.append(dict(
-            opts=("-d", "--debug"),
-            action="store_true",
-            dest="debug",
-            default=False,
-            help=_("Output to Shell console instead of GUI console")))
+        argument_list: List[Dict[str, Any]] = [
+            dict(
+                opts=("-d", "--debug"),
+                action="store_true",
+                dest="debug",
+                default=False,
+                help=_("Output to Shell console instead of GUI console"),
+            )
+        ]
         return argument_list

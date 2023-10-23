@@ -108,11 +108,7 @@ class InstanceNormalization(Layer):
 
         self.input_spec = InputSpec(ndim=ndim)  # pylint:disable=attribute-defined-outside-init
 
-        if self.axis is None:
-            shape = (1,)
-        else:
-            shape = (input_shape[self.axis],)
-
+        shape = (1, ) if self.axis is None else (input_shape[self.axis], )
         if self.scale:
             self.gamma = self.add_weight(shape=shape,
                                          name="gamma",
@@ -246,10 +242,17 @@ class AdaInstanceNormalization(Layer):
         """
         dim = input_shape[0][self.axis]
         if dim is None:
-            raise ValueError('Axis ' + str(self.axis) + ' of '
-                             'input tensor should have a defined dimension '
-                             'but the layer received an input with shape ' +
-                             str(input_shape[0]) + '.')
+            raise ValueError(
+                (
+                    (
+                        f'Axis {str(self.axis)}' + ' of '
+                        'input tensor should have a defined dimension '
+                        'but the layer received an input with shape '
+                    )
+                    + str(input_shape[0])
+                    + '.'
+                )
+            )
 
         super().build(input_shape)
 
@@ -397,7 +400,7 @@ class GroupNormalization(Layer):
                                     name='beta')
         self.built = True  # pylint:disable=attribute-defined-outside-init
 
-    def call(self, inputs, mask=None):  # pylint:disable=unused-argument,arguments-differ
+    def call(self, inputs, mask=None):    # pylint:disable=unused-argument,arguments-differ
         """This is where the layer's logic lives.
 
         Parameters
@@ -411,7 +414,7 @@ class GroupNormalization(Layer):
             A tensor or list/tuple of tensors
         """
         input_shape = K.int_shape(inputs)
-        if len(input_shape) != 4 and len(input_shape) != 2:
+        if len(input_shape) not in [4, 2]:
             raise ValueError('Inputs should have rank ' +
                              str(4) + " or " + str(2) +
                              '; Received input shape:', str(input_shape))

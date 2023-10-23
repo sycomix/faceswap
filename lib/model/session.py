@@ -128,8 +128,7 @@ class KSession():
         while done_items < items:
             if batch_size < 4:  # Not much difference in BS < 4
                 batch_size = 1
-            batch_items = ((items - done_items) // batch_size) * batch_size
-            if batch_items:
+            if batch_items := ((items - done_items) // batch_size) * batch_size:
                 pred_data = [x[done_items:done_items + batch_items] for x in feed]
                 pred = self._model.predict(pred_data, batch_size=batch_size)
                 done_items += batch_items

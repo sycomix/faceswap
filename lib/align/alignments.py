@@ -197,8 +197,7 @@ class Alignments():
             pts_time.append(cast(float, meta["pts_time"]))
             if meta["keyframe"]:
                 keyframes.append(idx)
-        retval = dict(pts_time=pts_time, keyframes=keyframes)
-        return retval
+        return dict(pts_time=pts_time, keyframes=keyframes)
 
     @property
     def thumbnails(self) -> "Thumbnails":
@@ -256,7 +255,7 @@ class Alignments():
         if pts_time[0] != 0:
             pts_time, keyframes = self._pad_leading_frames(pts_time, keyframes)
 
-        sample_filename = next(fname for fname in self.data)
+        sample_filename = next(iter(self.data))
         basename = sample_filename[:sample_filename.rfind("_")]
         logger.debug("sample filename: %s, base filename: %s", sample_filename, basename)
         logger.info("Saving video meta information to Alignments file")
@@ -385,7 +384,7 @@ class Alignments():
             retval = False
         else:
             frame_data = self._data.get(frame_name, cast(AlignmentDict, {}))
-            retval = bool(len(frame_data.get("faces", [])) > 1)
+            retval = len(frame_data.get("faces", [])) > 1
         logger.trace("'%s': %s", frame_name, retval)  # type:ignore
         return retval
 
@@ -469,7 +468,7 @@ class Alignments():
             ``True`` if a face was successfully deleted otherwise ``False``
         """
         logger.debug("Deleting face %s for frame_name '%s'", face_index, frame_name)
-        face_index = int(face_index)
+        face_index = face_index
         if face_index + 1 > self._count_faces_in_frame(frame_name):
             logger.debug("No face to delete: (frame_name: '%s', face_index %s)",
                          frame_name, face_index)
@@ -630,7 +629,7 @@ class _IO():
             The full path to the newly created ``.fsa`` alignments file
         """
         logger.info("Reformatting legacy alignments file...")
-        old_location = os.path.join(str(folder), filename)
+        old_location = os.path.join(folder, filename)
         new_location = f"{os.path.splitext(old_location)[0]}.{self._serializer.file_extension}"
         if os.path.exists(old_location):
             if os.path.exists(new_location):
@@ -693,7 +692,7 @@ class _IO():
             filename = f"{noext_name}.{self._serializer.file_extension}"
             logger.debug("File extension set from serializer: '%s'",
                          self._serializer.file_extension)
-        location = os.path.join(str(folder), filename)
+        location = os.path.join(folder, filename)
         if not os.path.exists(location):
             # Test for old format alignments files and reformat if they exist. This will be
             # executed if an alignments file has not been explicitly provided therefore it will not
@@ -762,7 +761,7 @@ class _IO():
         now = datetime.now().strftime("%Y%m%d_%H%M%S")
         src = self._file
         split = os.path.splitext(src)
-        dst = split[0] + "_" + now + split[1]
+        dst = f"{split[0]}_{now}{split[1]}"
         logger.info("Backing up original alignments to '%s'", dst)
         os.rename(src, dst)
         logger.debug("Backed up alignments")

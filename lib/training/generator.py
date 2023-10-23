@@ -212,15 +212,13 @@ class DataGenerator():
             while True:
                 if do_shuffle:
                     shuffle(imgs)
-                for img in imgs:
-                    yield img
+                yield from imgs
 
         img_iter = _img_iter(self._images[:])
         while True:
             img_paths = [next(img_iter)  # pylint:disable=stop-iteration-return
                          for _ in range(self._batch_size)]
-            retval = self._process_batch(img_paths)
-            yield retval
+            yield self._process_batch(img_paths)
 
     def _get_images_with_meta(self, filenames: List[str]) -> Tuple[np.ndarray, List[DetectedFace]]:
         """ Obtain the raw face images with associated :class:`DetectedFace` objects for this

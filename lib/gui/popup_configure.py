@@ -337,7 +337,7 @@ class _Tree(ttk.Frame):  # pylint:disable=too-many-ancestors
         for cat in categories:
             img = get_images().icons.get(f"settings_{cat}", "")
             text = cat.replace("_", " ").title()
-            text = " " + text if img else text
+            text = f" {text}" if img else text
             is_open = tk.TRUE if name is None or name == cat else tk.FALSE
             tree.insert("", "end", cat, text=text, image=img, open=is_open, tags="category")
             self._process_sections(tree, data[cat], cat, name == cat)
@@ -698,11 +698,7 @@ class DisplayArea(ttk.Frame):  # pylint:disable=too-many-ancestors
         config = self._configs[category]
         # Create a new config to pull through any defaults change
 
-        if "|" in selection:
-            lookup = ".".join(selection.split("|")[1:])
-        else:  # Expand global out from root node
-            lookup = "global"
-
+        lookup = ".".join(selection.split("|")[1:]) if "|" in selection else "global"
         if page_only and lookup not in config.config.sections():
             logger.info("No settings to save for the current page")
             return

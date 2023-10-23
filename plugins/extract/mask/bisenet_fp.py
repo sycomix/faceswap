@@ -409,8 +409,7 @@ class AttentionRefinementModule():  # pylint:disable=too-few-public-methods
         atten = Conv2D(self._filters, 1, use_bias=False, name=f"{prefix}.conv_atten")(atten)
         atten = BatchNormalization(epsilon=1e-5, name=f"{prefix}.bn_atten")(atten)
         atten = Activation("sigmoid", name=f"{prefix}.sigmoid")(atten)
-        var_x = Multiply(name=f"{prefix}.mul")([feat, atten])
-        return var_x
+        return Multiply(name=f"{prefix}.mul")([feat, atten])
 
 
 class ContextPath():  # pylint:disable=too-few-public-methods

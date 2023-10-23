@@ -333,8 +333,11 @@ class DetectedFace():
             Default: ``False``
         """
 
-        logger.trace("Creating from alignment: (alignment: %s, has_image: %s)",  # type: ignore
-                     alignment, bool(image is not None))
+        logger.trace(
+            "Creating from alignment: (alignment: %s, has_image: %s)",
+            alignment,
+            image is not None,
+        )
         self.left = alignment["x"]
         self.width = alignment["w"]
         self.top = alignment["y"]
@@ -372,15 +375,15 @@ class DetectedFace():
         """
         if (self.left is None or self.width is None or self.top is None or self.height is None):
             raise AssertionError("Some detected face variables have not been initialized")
-        alignment = PNGHeaderAlignmentsDict(
+        return PNGHeaderAlignmentsDict(
             x=self.left,
             w=self.width,
             y=self.top,
             h=self.height,
             landmarks_xy=self.landmarks_xy.tolist(),
             mask={name: mask.to_png_meta() for name, mask in self.mask.items()},
-            identity={k: v.tolist() for k, v in self._identity.items()})
-        return alignment
+            identity={k: v.tolist() for k, v in self._identity.items()},
+        )
 
     def from_png_meta(self, alignment: PNGHeaderAlignmentsDict) -> None:
         """ Set the attributes of this class from alignments stored in a png exif header.

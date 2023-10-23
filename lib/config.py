@@ -511,10 +511,7 @@ class FaceswapConfig():
                                        tabsize=4,
                                        subsequent_indent=subsequent_indent) + "\n"
         helptext = '# {}'.format(formatted[:-1].replace("\n", "\n# "))  # Strip last newline
-        if is_section:
-            helptext = helptext.upper()
-        else:
-            helptext = f"\n{helptext}"
+        helptext = helptext.upper() if is_section else f"\n{helptext}"
         logger.debug("formatted help: '%s'", helptext)
         return helptext
 
@@ -572,7 +569,7 @@ class FaceswapConfig():
                     opt_values = self._parse_list(section_name, item)
                     if not opt_values:  # No option selected
                         continue
-                    if not all(val in opt.choices for val in opt_values):
+                    if any(val not in opt.choices for val in opt_values):
                         invalid = [val for val in opt_values if val not in opt.choices]
                         valid = ", ".join(val for val in opt_values if val in opt.choices)
                         logger.warning("The option(s) %s are not valid selections for '%s': '%s'. "

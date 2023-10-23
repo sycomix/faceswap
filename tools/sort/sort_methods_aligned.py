@@ -220,8 +220,7 @@ class SortSize(SortAlignedMetric):
             The size metric for the current face
         """
         roi = aligned_face.original_roi
-        size = ((roi[1][0] - roi[0][0]) ** 2 + (roi[1][1] - roi[0][1]) ** 2) ** 0.5
-        return size
+        return ((roi[1][0] - roi[0][0]) ** 2 + (roi[1][1] - roi[0][1]) ** 2) ** 0.5
 
     def binning(self) -> List[List[str]]:
         """ Create bins to split linearly from the lowest to the highest sample value
@@ -345,9 +344,7 @@ class SortFaceCNN(SortAlignedMetric):
             for key, references in reference_groups.items():
                 try:
                     score = self._get_avg_score(fl1, references)
-                except TypeError:
-                    score = float("inf")
-                except ZeroDivisionError:
+                except (TypeError, ZeroDivisionError):
                     score = float("inf")
                 if score < current_score:
                     current_key, current_score = key, score

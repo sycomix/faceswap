@@ -212,16 +212,18 @@ class ModelBase():
     @property
     def input_shapes(self) -> List[Tuple[None, int, int, int]]:
         """ list: A flattened list corresponding to all of the inputs to the model. """
-        shapes = [cast(Tuple[None, int, int, int], K.int_shape(inputs))
-                  for inputs in self.model.inputs]
-        return shapes
+        return [
+            cast(Tuple[None, int, int, int], K.int_shape(inputs))
+            for inputs in self.model.inputs
+        ]
 
     @property
     def output_shapes(self) -> List[Tuple[None, int, int, int]]:
         """ list: A flattened list corresponding to all of the outputs of the model. """
-        shapes = [cast(Tuple[None, int, int, int], K.int_shape(output))
-                  for output in self.model.outputs]
-        return shapes
+        return [
+            cast(Tuple[None, int, int, int], K.int_shape(output))
+            for output in self.model.outputs
+        ]
 
     @property
     def iterations(self) -> int:
@@ -892,8 +894,7 @@ class _Inference():  # pylint:disable=too-few-public-methods
         # mask is enabled (i.e. the mask is created in fully connected layers)
         anodes = anodes.squeeze() if anodes.ndim == 3 else anodes
 
-        retval = [(node[0], node[2]) for node in anodes]
-        return retval
+        return [(node[0], node[2]) for node in anodes]
 
     def _make_inference_model(self, saved_model: keras.models.Model) -> keras.models.Model:
         """ Extract the sub-models from the saved model that are required for inference.

@@ -221,10 +221,10 @@ class Aligner(Extractor):  # pylint:disable=abstract-method
         if not self._re_align.active:
             return None
 
-        exhausted = False
         if self._re_align.items_queued:
             batch = self._re_align.get_batch()
             logger.trace("Re-align batch: %s", batch)  # type: ignore[attr-defined]
+            exhausted = False
             return exhausted, batch
 
         if self._eof_seen and self._re_align.items_tracked:
@@ -234,11 +234,10 @@ class Aligner(Extractor):  # pylint:disable=abstract-method
             return self.get_batch(queue)
 
         if self._eof_seen:
-            exhausted = True
             logger.debug("All items processed. Returning empty batch")
             self._filter.output_counts()
             self._eof_seen = False  # Reset for plugin re-use
-            return exhausted, AlignerBatch(batch_id=-1)
+            return True, AlignerBatch(batch_id=-1)
 
         return None
 
@@ -469,12 +468,11 @@ class Aligner(Extractor):  # pylint:disable=abstract-method
             The filter masks required for masking the re-aligns
         """
         if self._re_align.do_refeeds:
-            retval = batch.second_pass_masks  # Masks already calculated during re-feed
+            return batch.second_pass_masks
         elif self._re_align.do_filter:
-            retval = self._filter.filtered_mask(batch)[None, ...]
+            return self._filter.filtered_mask(batch)[None, ...]
         else:
-            retval = np.zeros((batch.landmarks.shape[0], ), dtype="bool")[None, ...]
-        return retval
+            return np.zeros((batch.landmarks.shape[0], ), dtype="bool")[None, ...]
 
     def _process_input_second_pass(self, batch: AlignerBatch) -> None:
         """ Process the input for 2nd-pass re-alignment

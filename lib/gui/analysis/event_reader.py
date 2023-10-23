@@ -308,7 +308,7 @@ class _Cache():
 
         times, loss = self._process_data(data, is_live)
 
-        if is_live and not all(len(val) == len(self._loss_labels) for val in loss):
+        if is_live and any(len(val) != len(self._loss_labels) for val in loss):
             # TODO Many attempts have been made to fix this for live graph logging, and the issue
             # of non-consistent loss record sizes keeps coming up. In the meantime we shall swallow
             # any loss values that are of incorrect length so graph remains functional. This will,
@@ -389,8 +389,8 @@ class _Cache():
 
         if len(l_loss[-1]) != len(self._loss_labels):
             logger.debug("Truncated loss found. loss count: %s", len(l_loss))
-            idx = sorted(data)[-1]
             if is_live:
+                idx = sorted(data)[-1]
                 logger.debug("Setting carried over data: %s", data[idx])
                 self._carry_over[idx] = data[idx]
             logger.debug("Removing truncated loss: (timestamp: %s, loss: %s)",
@@ -440,12 +440,11 @@ class _Cache():
         """
         if session_id is None:
             raw = self._data
-        else:
-            data = self._data.get(session_id)
-            if not data:
-                return None
+        elif data := self._data.get(session_id):
             raw = {session_id: data}
 
+        else:
+            return None
         retval: Dict[int, Dict[str, Union[np.ndarray, List[str]]]] = {}
         for idx, data in raw.items():
             array = data.loss if metric == "loss" else data.timestamps

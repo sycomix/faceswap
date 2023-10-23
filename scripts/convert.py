@@ -402,11 +402,11 @@ class DiskIO():
         minframe, maxframe = None, None
         if self._images.is_video:
             minframe, maxframe = 1, self._images.count
-        else:
-            indices = [int(self._imageidxre.findall(os.path.basename(filename))[0])
-                       for filename in self._images.file_list]
-            if indices:
-                minframe, maxframe = min(indices), max(indices)
+        elif indices := [
+            int(self._imageidxre.findall(os.path.basename(filename))[0])
+            for filename in self._images.file_list
+        ]:
+            minframe, maxframe = min(indices), max(indices)
         logger.debug("minframe: %s, maxframe: %s", minframe, maxframe)
 
         if minframe is None or maxframe is None:
@@ -858,13 +858,16 @@ class Predict():
             logger.debug("Trainer name provided: '%s'", self._args.trainer)
             return self._args.trainer
 
-        statefiles = [fname for fname in os.listdir(str(model_dir))
-                      if fname.endswith("_state.json")]
+        statefiles = [
+            fname
+            for fname in os.listdir(model_dir)
+            if fname.endswith("_state.json")
+        ]
         if len(statefiles) != 1:
             raise FaceswapError("There should be 1 state file in your model folder. "
                                 f"{len(statefiles)} were found. Specify a trainer with the '-t', "
                                 "'--trainer' option.")
-        statefile = os.path.join(str(model_dir), statefiles[0])
+        statefile = os.path.join(model_dir, statefiles[0])
 
         state = self._serializer.load(statefile)
         trainer = state.get("name", None)
@@ -1168,13 +1171,13 @@ class OptionalActions():  # pylint:disable=too-few-public-methods
                     logger.warning("Legacy faces discovered in '%s'. These faces will be updated",
                                    input_aligned_dir)
                     log_once = True
-                data = update_legacy_png_header(fullpath, self._alignments)
-                if not data:
+                if data := update_legacy_png_header(fullpath, self._alignments):
+                    meta = data["source"]
+                else:
                     raise FaceswapError(
                         f"Some of the faces being passed in from '{input_aligned_dir}' could not "
                         f"be matched to the alignments file '{self._alignments.file}'\n"
                         "Please double check your sources and try again.")
-                meta = data["source"]
             else:
                 meta = metadata["itxt"]["source"]
             retval.setdefault(meta["source_filename"], []).append(meta["face_index"])

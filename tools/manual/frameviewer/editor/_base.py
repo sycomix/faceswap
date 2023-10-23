@@ -81,8 +81,7 @@ class Editor():
         """ ["frame", "face"]: The view mode for the currently selected editor. If the editor does
         not have a view mode that can be updated, then `"frame"` will be returned. """
         tk_var = self._actions.get("magnify", dict()).get("tk_var", None)
-        retval = "frame" if tk_var is None or not tk_var.get() else "face"
-        return retval
+        return "frame" if tk_var is None or not tk_var.get() else "face"
 
     @property
     def _zoomed_roi(self):
@@ -135,12 +134,13 @@ class Editor():
         """ list: The detected face objects to be iterated. This will either be all faces in the
         frame (normal view) or the single zoomed in face (zoom mode). """
         if self._globals.frame_index == -1:
-            faces = []
-        else:
-            faces = self._det_faces.current_faces[self._globals.frame_index]
-            faces = ([faces[self._globals.face_index]]
-                     if self._globals.is_zoomed and faces else faces)
-        return faces
+            return []
+        faces = self._det_faces.current_faces[self._globals.frame_index]
+        return (
+            [faces[self._globals.face_index]]
+            if self._globals.is_zoomed and faces
+            else faces
+        )
 
     def _add_key_bindings(self, key_bindings):
         """ Add the editor specific key bindings for the currently viewed editor.
@@ -233,18 +233,10 @@ class Editor():
         """
         object_color_keys = self._get_object_color_keys(key, object_type)
         tracking_id = "_".join((key, str(face_index)))
-        face_tag = "face_{}".format(face_index)
+        face_tag = f"face_{face_index}"
         face_objects = set(self._canvas.find_withtag(face_tag))
         annotation_objects = set(self._canvas.find_withtag(key))
-        existing_object = tuple(face_objects.intersection(annotation_objects))
-        if not existing_object:
-            item_id = self._add_new_object(key,
-                                           object_type,
-                                           face_index,
-                                           coordinates,
-                                           object_kwargs)
-            update_color = bool(object_color_keys)
-        else:
+        if existing_object := tuple(face_objects.intersection(annotation_objects)):
             item_id = existing_object[0]
             update_color = self._update_existing_object(
                 existing_object[0],
@@ -252,6 +244,13 @@ class Editor():
                 object_kwargs,
                 tracking_id,
                 object_color_keys)
+        else:
+            item_id = self._add_new_object(key,
+                                           object_type,
+                                           face_index,
+                                           coordinates,
+                                           object_kwargs)
+            update_color = bool(object_color_keys)
         if update_color:
             self._current_color[tracking_id] = object_kwargs[object_color_keys[0]]
         return item_id
@@ -310,9 +309,9 @@ class Editor():
                      "coordinates: %s, object_kwargs: %s)", key, object_type, face_index,
                      coordinates, object_kwargs)
         object_kwargs["tags"] = self._set_object_tags(face_index, key)
-        item_id = getattr(self._canvas,
-                          "create_{}".format(object_type))(*coordinates, **object_kwargs)
-        return item_id
+        return getattr(self._canvas, f"create_{object_type}")(
+            *coordinates, **object_kwargs
+        )
 
     def _set_object_tags(self, face_index, key):
         """ Create the tkinter object tags for the incoming object.
@@ -329,17 +328,19 @@ class Editor():
         list
             The generated tags for the current object
         """
-        tags = ["face_{}".format(face_index),
-                self.__class__.__name__,
-                "{}_face_{}".format(self.__class__.__name__, face_index),
-                key,
-                "{}_face_{}".format(key, face_index)]
+        tags = [
+            f"face_{face_index}",
+            self.__class__.__name__,
+            f"{self.__class__.__name__}_face_{face_index}",
+            key,
+            f"{key}_face_{face_index}",
+        ]
         if "_" in key:
             split_key = key.split("_")
             if split_key[-1].isdigit():
                 base_tag = "_".join(split_key[:-1])
                 tags.append(base_tag)
-                tags.append("{}_face_{}".format(base_tag, face_index))
+                tags.append(f"{base_tag}_face_{face_index}")
         return tags
 
     def _update_existing_object(self, item_id, coordinates, object_kwargs,

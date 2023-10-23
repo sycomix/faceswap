@@ -285,7 +285,7 @@ class Mask(Editor):
             top_left = self._zoomed_roi[:2]
             # Hide all masks and only display selected
             self._canvas.itemconfig("Mask", state="hidden")
-            self._canvas.itemconfig("Mask_face_{}".format(face_index), state="normal")
+            self._canvas.itemconfig(f"Mask_face_{face_index}", state="normal")
         else:
             display_image = self._update_mask_image_full_frame(mask, rgb_color, face_index)
             top_left = self._meta["top_left"][face_index]
@@ -383,7 +383,7 @@ class Mask(Editor):
         self._object_tracker("mask_roi", "polygon", face_index, box, kwargs)
         if self._globals.is_zoomed:
             # Raise box above zoomed image
-            self._canvas.tag_raise("mask_roi_face_{}".format(face_index))
+            self._canvas.tag_raise(f"mask_roi_face_{face_index}")
 
     # << MOUSE HANDLING >>
     # Mouse cursor display

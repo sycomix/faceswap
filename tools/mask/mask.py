@@ -229,11 +229,11 @@ class Mask():  # pylint:disable=too-few-public-methods
                     logger.warning("Legacy faces discovered. These faces will be updated")
                     log_once = True
                 metadata = update_legacy_png_header(filename, self._alignments)
-                if not metadata:  # Face not found
-                    self._counts["skip"] += 1
-                    logger.warning("Legacy face not found in alignments file. This face has not "
-                                   "been updated: '%s'", filename)
-                    continue
+            if not metadata:  # Face not found
+                self._counts["skip"] += 1
+                logger.warning("Legacy face not found in alignments file. This face has not "
+                               "been updated: '%s'", filename)
+                continue
             if "source_frame_dims" not in metadata.get("source", {}):
                 logger.error("The faces need to be re-extracted as at least some of them do not "
                              "contain information required to correctly generate masks.")
@@ -328,8 +328,11 @@ class Mask():  # pylint:disable=too-few-public-methods
         str:
             The suffix to be appended to the output filename
         """
-        sfx = "mask_preview_"
-        sfx += "face_" if not arguments.full_frame or self._input_is_faces else "frame_"
+        sfx = "mask_preview_" + (
+            "face_"
+            if not arguments.full_frame or self._input_is_faces
+            else "frame_"
+        )
         sfx += f"{arguments.output_type}.png"
         return sfx
 
@@ -446,8 +449,9 @@ class Mask():  # pylint:disable=too-few-public-methods
         else:
             mask_types = [self._mask_type]
 
-        if detected_face.mask is None or not any(mask in detected_face.mask
-                                                 for mask in mask_types):
+        if detected_face.mask is None or all(
+            mask not in detected_face.mask for mask in mask_types
+        ):
             logger.warning("Mask type '%s' does not exist for frame '%s' index %s. Skipping",
                            self._mask_type, frame, idx)
             return

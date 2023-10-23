@@ -718,17 +718,25 @@ def nms(rectangles: np.ndarray,
 
     pick = []
     while len(s_sort) > 0:
-        s_bboxes = np.concatenate([  # s_sort[-1] have highest prob score, s_sort[0:-1]->others
-            np.maximum(bboxes[:2, s_sort[-1], None], bboxes[:2, s_sort[0:-1]]),
-            np.minimum(bboxes[2:, s_sort[-1], None], bboxes[2:, s_sort[0:-1]])], axis=0)
+        s_bboxes = np.concatenate(
+            [
+                np.maximum(
+                    bboxes[:2, s_sort[-1], None], bboxes[:2, s_sort[:-1]]
+                ),
+                np.minimum(
+                    bboxes[2:, s_sort[-1], None], bboxes[2:, s_sort[:-1]]
+                ),
+            ],
+            axis=0,
+        )
 
         inter = (np.maximum(0.0, s_bboxes[2] - s_bboxes[0] + 1) *
                  np.maximum(0.0, s_bboxes[3] - s_bboxes[1] + 1))
 
         if method == "iom":
-            var_o = inter / np.minimum(area[s_sort[-1]], area[s_sort[0:-1]])
+            var_o = inter / np.minimum(area[s_sort[-1]], area[s_sort[:-1]])
         else:
-            var_o = inter / (area[s_sort[-1]] + area[s_sort[0:-1]] - inter)
+            var_o = inter / (area[s_sort[-1]] + area[s_sort[:-1]] - inter)
 
         pick.append(s_sort[-1])
         s_sort = s_sort[np.where(var_o <= threshold)[0]]

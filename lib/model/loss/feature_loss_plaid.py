@@ -340,7 +340,6 @@ class LPIPSLoss():  # pylint:disable=too-few-public-methods
             # linear cannot be loaded, and this input would be incorrect (as linear input should
             # be the diff between y_true and y_pred)
             raise NotImplementedError
-            return self._linear_net(inputs)  # pylint:disable=unreachable
         return [K.sum(x, axis=-1) for x in inputs]
 
     def __call__(self,

@@ -176,12 +176,12 @@ class Detector(Extractor):  # pylint:disable=abstract-method
         else:
             logger.trace(item)  # type:ignore
 
-        if not exhausted and not batch.filename:
+        if exhausted or batch.filename:
+            return exhausted, batch
+        else:
             # This occurs when face filter is fed aligned faces.
             # Need to re-run until EOF is hit
             return self.get_batch(queue)
-
-        return exhausted, batch
 
     # <<< FINALIZE METHODS>>> #
     def finalize(self, batch: BatchType) -> Generator[ExtractMedia, None, None]:

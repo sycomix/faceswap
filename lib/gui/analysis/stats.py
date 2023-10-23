@@ -86,9 +86,7 @@ class GlobalSession():
     @property
     def session_ids(self) -> List[int]:
         """ list: The sorted list of all existing session ids in the state file """
-        if self._tb_logs is None:
-            return []
-        return self._tb_logs.session_ids
+        return [] if self._tb_logs is None else self._tb_logs.session_ids
 
     def _load_state_file(self) -> None:
         """ Load the current state file to :attr:`_state`. """
@@ -273,13 +271,17 @@ class GlobalSession():
                          for sess_id, logs
                          in self._tb_logs.get_loss(session_id=session_id).items()}
 
-        if session_id is None:
-            retval: List[str] = list(set(loss_key
-                                         for session in loss_keys.values()
-                                         for loss_key in session))
-        else:
-            retval = loss_keys.get(session_id, [])
-        return retval
+        return (
+            list(
+                {
+                    loss_key
+                    for session in loss_keys.values()
+                    for loss_key in session
+                }
+            )
+            if session_id is None
+            else loss_keys.get(session_id, [])
+        )
 
 
 _SESSION = GlobalSession()
@@ -629,9 +631,8 @@ class Calculations():
                     self._selections.insert(0, selection)
                 else:
                     self._selections.append(selection)
-        else:
-            if selection in self._selections:
-                self._selections.remove(selection)
+        elif selection in self._selections:
+            self._selections.remove(selection)
 
     def set_iterations_limit(self, limit: int) -> None:
         """ Set the number of iterations to display in the calculations.
@@ -652,10 +653,10 @@ class Calculations():
         """ Obtain the raw loss values and add them to a new :attr:`stats` dictionary. """
         logger.debug("Getting Raw Data")
         self.stats.clear()
-        iterations = set()
-
         if self._display.lower() == "loss":
             loss_dict = _SESSION.get_loss(self._session_id)
+            iterations = set()
+
             for loss_name, loss in loss_dict.items():
                 if loss_name not in self._loss_keys:
                     continue
@@ -921,11 +922,11 @@ class _ExponentialMovingAverage():  # pylint:disable=too-few-public-methods
 
     def _ewma_vectorized_safe(self) -> None:
         """ Perform the vectorized exponential moving average in a safe way. """
-        num_rows = int(self._data.size // self._row_size)  # the number of rows to use
         leftover = int(self._data.size % self._row_size)  # the amount of data leftover
         first_offset = self._data[0]
 
         if leftover > 0:
+            num_rows = int(self._data.size // self._row_size)  # the number of rows to use
             # set temporary results to slice view of out parameter
             out_main_view = np.reshape(self._out[:-leftover], (num_rows, self._row_size))
             data_main_view = np.reshape(self._data[:-leftover], (num_rows, self._row_size))

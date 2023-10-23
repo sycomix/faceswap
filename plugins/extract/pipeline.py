@@ -192,8 +192,10 @@ class Extractor():
     def phase_text(self) -> str:
         """ str: The plugins that are running in the current phase, formatted for info text
         output. """
-        plugin_types = set(self._get_plugin_type_and_index(phase)[0]
-                           for phase in self._current_phase)
+        plugin_types = {
+            self._get_plugin_type_and_index(phase)[0]
+            for phase in self._current_phase
+        }
         retval = ", ".join(plugin_type.title() for plugin_type in list(plugin_types))
         logger.trace(retval)  # type: ignore
         return retval
@@ -550,8 +552,9 @@ class Extractor():
         current_phase: List[str] = []
         available = cast(int, self._vram_stats["vram_free"])
         for phase in self._flow:
-            num_plugins = len([p for p in current_phase if self._vram_per_phase[p] > 0])
-            num_plugins += 1 if self._vram_per_phase[phase] > 0 else 0
+            num_plugins = len(
+                [p for p in current_phase if self._vram_per_phase[p] > 0]
+            ) + (1 if self._vram_per_phase[phase] > 0 else 0)
             scaling = self._parallel_scaling.get(num_plugins, self._scaling_fallback)
             required = sum(self._vram_per_phase[p] for p in current_phase + [phase]) * scaling
             logger.debug("Num plugins for phase: %s, scaling: %s, vram required: %s",
@@ -614,14 +617,15 @@ class Extractor():
             return None
         aligner_name = aligner.replace("-", "_").lower()
         logger.debug("Loading Aligner: '%s'", aligner_name)
-        plugin = PluginLoader.get_aligner(aligner_name)(exclude_gpus=self._exclude_gpus,
-                                                        configfile=configfile,
-                                                        normalize_method=normalize_method,
-                                                        re_feed=re_feed,
-                                                        re_align=re_align,
-                                                        disable_filter=disable_filter,
-                                                        instance=self._instance)
-        return plugin
+        return PluginLoader.get_aligner(aligner_name)(
+            exclude_gpus=self._exclude_gpus,
+            configfile=configfile,
+            normalize_method=normalize_method,
+            re_feed=re_feed,
+            re_align=re_align,
+            disable_filter=disable_filter,
+            instance=self._instance,
+        )
 
     def _load_detect(self,
                      detector: Optional[str],
@@ -634,12 +638,13 @@ class Extractor():
             return None
         detector_name = detector.replace("-", "_").lower()
         logger.debug("Loading Detector: '%s'", detector_name)
-        plugin = PluginLoader.get_detector(detector_name)(exclude_gpus=self._exclude_gpus,
-                                                          rotation=rotation,
-                                                          min_size=min_size,
-                                                          configfile=configfile,
-                                                          instance=self._instance)
-        return plugin
+        return PluginLoader.get_detector(detector_name)(
+            exclude_gpus=self._exclude_gpus,
+            rotation=rotation,
+            min_size=min_size,
+            configfile=configfile,
+            instance=self._instance,
+        )
 
     def _load_mask(self,
                    masker: Optional[str],
@@ -663,10 +668,11 @@ class Extractor():
             return None
         masker_name = masker.replace("-", "_").lower()
         logger.debug("Loading Masker: '%s'", masker_name)
-        plugin = PluginLoader.get_masker(masker_name)(exclude_gpus=self._exclude_gpus,
-                                                      configfile=configfile,
-                                                      instance=self._instance)
-        return plugin
+        return PluginLoader.get_masker(masker_name)(
+            exclude_gpus=self._exclude_gpus,
+            configfile=configfile,
+            instance=self._instance,
+        )
 
     def _load_recognition(self,
                           recognition: Optional[str],
@@ -677,10 +683,11 @@ class Extractor():
             return None
         recognition_name = recognition.replace("-", "_").lower()
         logger.debug("Loading Recognition: '%s'", recognition_name)
-        plugin = PluginLoader.get_recognition(recognition_name)(exclude_gpus=self._exclude_gpus,
-                                                                configfile=configfile,
-                                                                instance=self._instance)
-        return plugin
+        return PluginLoader.get_recognition(recognition_name)(
+            exclude_gpus=self._exclude_gpus,
+            configfile=configfile,
+            instance=self._instance,
+        )
 
     def _launch_plugin(self, phase: str) -> None:
         """ Launch an extraction plugin """
@@ -889,8 +896,7 @@ class ExtractMedia():
         """
         logger.trace("Requested color format '%s' for frame '%s'",  # type: ignore
                      color_format, self._filename)
-        image = getattr(self, f"_image_as_{color_format.lower()}")()
-        return image
+        return getattr(self, f"_image_as_{color_format.lower()}")()
 
     def add_detected_faces(self, faces: List["DetectedFace"]) -> None:
         """ Add detected faces to the object. Called at the end of each extraction phase.

@@ -149,8 +149,7 @@ class TestMediaLoader:
         mocker.patch("tools.alignments.media.MediaLoader.sorted_items",
                      return_value=os.listdir(folder))
         mocker.patch("tools.alignments.media.MediaLoader.load_items")
-        loader = MediaLoader(folder)
-        return loader
+        return MediaLoader(folder)
 
     def test_init(self,
                   folder: str,
@@ -358,8 +357,7 @@ class TestFaces:
             Initialized instance for testing
         """
         mocker.patch("tools.alignments.media.read_image_meta_batch")
-        loader = Faces(folder, None)
-        return loader
+        return Faces(folder, None)
 
     def test_init(self,
                   folder: str,

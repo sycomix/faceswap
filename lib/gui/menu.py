@@ -446,12 +446,10 @@ class HelpMenu(tk.Menu):  # pylint:disable=too-many-ancestors
                     print(output.strip())
             retcode = cmd.poll()
         logger.debug("'%s' returncode: %s", gitcmd, retcode)
-        if retcode != 0:
-            logger.info("An error occurred during update. return code: %s", retcode)
-            retval = False
-        else:
-            retval = True
-        return retval
+        if retcode == 0:
+            return True
+        logger.info("An error occurred during update. return code: %s", retcode)
+        return False
 
 
 class TaskBar(ttk.Frame):  # pylint: disable=too-many-ancestors

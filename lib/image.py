@@ -147,7 +147,7 @@ class FfmpegReader(imageio.plugins.ffmpeg.FfmpegFormat.Reader):  # type:ignore
         logger.trace("keyframe pts_time: %s, keyframe: %s", prev_pts_time, prev_keyframe)
         return prev_pts_time, prev_keyframe
 
-    def _initialize(self, index=0):  # noqa:C901
+    def _initialize(self, index=0):    # noqa:C901
         """ Replace ImageIO _initialize with a version that explictly uses keyframes.
 
         Notes
@@ -237,9 +237,7 @@ class FfmpegReader(imageio.plugins.ffmpeg.FfmpegFormat.Reader):  # type:ignore
                             "home brew to get a version with "
                             "support for cameras."
                         )
-                raise IndexError(
-                    "No camera at {}.\n\n{}".format(self.request._video, err_text)
-                )
+                raise IndexError(f"No camera at {self.request._video}.\n\n{err_text}")
             else:
                 self._meta.update(meta)
         elif index == 0:
@@ -307,22 +305,23 @@ def read_image(filename, raise_error=False, with_metadata=False):
             retval = (image, metadata)
     except TypeError as err:
         success = False
-        msg = "Error while reading image (TypeError): '{}'".format(filename)
-        msg += ". Original error message: {}".format(str(err))
+        msg = (
+            f"Error while reading image (TypeError): '{filename}'"
+            + f". Original error message: {str(err)}"
+        )
         logger.error(msg)
         if raise_error:
             raise Exception(msg)
     except ValueError as err:
         success = False
-        msg = ("Error while reading image. This can be caused by special characters in the "
-               "filename or a corrupt image file: '{}'".format(filename))
-        msg += ". Original error message: {}".format(str(err))
+        msg = f"Error while reading image. This can be caused by special characters in the filename or a corrupt image file: '{filename}'"
+        msg += f". Original error message: {str(err)}"
         logger.error(msg)
         if raise_error:
             raise Exception(msg)
     except Exception as err:  # pylint:disable=broad-except
         success = False
-        msg = "Failed to load image '{}'. Original Error: {}".format(filename, str(err))
+        msg = f"Failed to load image '{filename}'. Original Error: {str(err)}"
         logger.error(msg)
         if raise_error:
             raise Exception(msg)
@@ -505,8 +504,7 @@ def pack_to_itxt(metadata):
     chunk = key + b"\0\0\0\0\0" + metadata
     crc = struct.pack(">I", crc32(chunk, crc32(b"iTXt")) & 0xFFFFFFFF)
     length = struct.pack(">I", len(chunk))
-    retval = length + b"iTXt" + chunk + crc
-    return retval
+    return length + b"iTXt" + chunk + crc
 
 
 def update_existing_metadata(filename, metadata):
@@ -520,7 +518,7 @@ def update_existing_metadata(filename, metadata):
         The dictionary to write to the header. Can be pre-encoded as utf-8.
     """
 
-    tmp_filename = filename + "~"
+    tmp_filename = f"{filename}~"
     with open(filename, "rb") as png, open(tmp_filename, "wb") as tmp:
         chunk = png.read(8)
         if chunk != b"\x89PNG\r\n\x1a\n":
@@ -612,8 +610,7 @@ def png_write_meta(png, data):
 
     """
     split = png.find(b"IDAT") - 4
-    retval = png[:split] + pack_to_itxt(data) + png[split:]
-    return retval
+    return png[:split] + pack_to_itxt(data) + png[split:]
 
 
 def png_read_meta(png):
@@ -719,7 +716,7 @@ def batch_convert_color(batch, colorspace):
     logger.trace("Batch converting: (batch shape: %s, colorspace: %s)", batch.shape, colorspace)
     original_shape = batch.shape
     batch = batch.reshape((original_shape[0] * original_shape[1], *original_shape[2:]))
-    batch = cv2.cvtColor(batch, getattr(cv2, "COLOR_{}".format(colorspace)))
+    batch = cv2.cvtColor(batch, getattr(cv2, f"COLOR_{colorspace}"))
     return batch.reshape(original_shape)
 
 
@@ -888,7 +885,7 @@ class ImageIO():
             If the given location does not exist
         """
         if isinstance(self.location, str) and not os.path.exists(self.location):
-            raise FaceswapError("The location '{}' does not exist".format(self.location))
+            raise FaceswapError(f"The location '{self.location}' does not exist")
         if isinstance(self.location, (list, tuple)) and not all(os.path.exists(location)
                                                                 for location in self.location):
             raise FaceswapError("Not all locations in the input list exist")
@@ -1045,7 +1042,7 @@ class ImagesLoader(ImageIO):
         elif os.path.splitext(self.location)[1].lower() in _video_extensions:
             retval = True
         else:
-            raise FaceswapError("The input file '{}' is not a valid video".format(self.location))
+            raise FaceswapError(f"The input file '{self.location}' is not a valid video")
         logger.debug("Input '%s' is_video: %s", self.location, retval)
         return retval
 
@@ -1407,11 +1404,12 @@ class ImagesSaver(ImageIO):
             If the given location does not exist or the location is not a folder
         """
         if not isinstance(self.location, str):
-            raise FaceswapError("The output location must be a string not a "
-                                "{}".format(type(self.location)))
+            raise FaceswapError(
+                f"The output location must be a string not a {type(self.location)}"
+            )
         super()._check_location_exists()
         if not os.path.isdir(self.location):
-            raise FaceswapError("The output location '{}' is not a folder".format(self.location))
+            raise FaceswapError(f"The output location '{self.location}' is not a folder")
 
     def _process(self, queue):
         """ Saves images from the save queue to the given :attr:`location` inside a thread.

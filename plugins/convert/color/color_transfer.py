@@ -120,9 +120,7 @@ class Color(Adjustment):
             transfer.astype("uint8"),
             cv2.COLOR_LAB2BGR).astype("float32") / 255.0  # pylint: disable=no-member
         background = new_face * (1 - raw_mask)
-        merged = transfer + background
-        # return the color transferred image
-        return merged
+        return transfer + background
 
     @staticmethod
     def image_stats(image):
@@ -167,16 +165,12 @@ class Color(Adjustment):
         arr_min = arr.min()
         arr_max = arr.max()
 
-        # check if scaling needs to be done to be in new_range
-        if arr_min < new_range[0] or arr_max > new_range[1]:
-            # perform min-max scaling
-            scaled = (new_range[1] - new_range[0]) * (arr - arr_min) / (arr_max -
-                                                                        arr_min) + new_range[0]
-        else:
-            # return array if already in range
-            scaled = arr
-
-        return scaled
+        return (
+            (new_range[1] - new_range[0]) * (arr - arr_min) / (arr_max - arr_min)
+            + new_range[0]
+            if arr_min < new_range[0] or arr_max > new_range[1]
+            else arr
+        )
 
     def _scale_array(self, arr, clip=True):
         """
@@ -195,9 +189,6 @@ class Color(Adjustment):
         NumPy array that has been scaled to be in [0, 255] range
         """
         if clip:
-            scaled = np.clip(arr, 0, 255)
-        else:
-            scale_range = (max([arr.min(), 0]), min([arr.max(), 255]))
-            scaled = self._min_max_scale(arr, new_range=scale_range)
-
-        return scaled
+            return np.clip(arr, 0, 255)
+        scale_range = (max([arr.min(), 0]), min([arr.max(), 255]))
+        return self._min_max_scale(arr, new_range=scale_range)

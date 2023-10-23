@@ -523,8 +523,7 @@ class Test_EventParser:  # pylint:disable=invalid-name
         event.summary.value.add(tag=tags[step],  # pylint:disable=no-member
                                 simple_value=loss_value)
         event.wall_time = timestamp
-        retval = event.SerializeToString() if serialize else event
-        return retval
+        return event.SerializeToString() if serialize else event
 
     @pytest.fixture(name="mock_iterator")
     def iterator(self) -> Iterator[bytes]:
@@ -574,8 +573,7 @@ class Test_EventParser:  # pylint:disable=invalid-name
         :class::class:`lib.gui.analysis.event_reader._EventParser`
             The class instance for testing
         """
-        event_parser = _EventParser(mock_iterator, mock_cache, live_data=False)
-        return event_parser
+        return _EventParser(mock_iterator, mock_cache, live_data=False)
 
     def test__init_(self,
                     event_parser_instance: _EventParser,

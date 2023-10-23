@@ -304,7 +304,7 @@ class Rename():  # pylint:disable=too-few-public-methods
                 # process afterwards
                 logger.debug("interim renaming file to avoid conflict: (src: '%s', dst: '%s')",
                              src, dst)
-                new = new + ".tmp"
+                new = f"{new}.tmp"
                 conflicts.append(new)
 
             logger.verbose("Renaming '%s' to '%s'", old, new)  # type:ignore

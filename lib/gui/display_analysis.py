@@ -282,7 +282,7 @@ class Analysis(DisplayPage):  # pylint: disable=too-many-ancestors
             return
 
         logger.debug("Saving to: '%s'", savefile)
-        fieldnames = sorted(key for key in self._summary[0].keys())
+        fieldnames = sorted(iter(self._summary[0].keys()))
         with savefile as outfile:
             csvout = csv.DictWriter(outfile, fieldnames)
             csvout.writeheader()
@@ -518,8 +518,7 @@ class StatsData(ttk.Frame):  # pylint: disable=too-many-ancestors
         """
         region = self._tree.identify("region", event.x, event.y)
         selection = self._tree.focus()
-        values = self._tree.item(selection, "values")
-        if values:
+        if values := self._tree.item(selection, "values"):
             logger.debug("Selected values: %s", values)
             self._selected_id.set(values[0])
             if region == "tree" and self._check_valid_data(values):

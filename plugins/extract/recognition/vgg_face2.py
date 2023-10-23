@@ -313,7 +313,8 @@ class Cluster():  # pylint: disable=too-few-public-methods
         logger.info("Sorting face distances. Depending on your dataset this may take some time...")
         if self._threshold:
             self._threshold = self._result_linkage[:, 2].max() * self._threshold
-        result_order = self._seriation(self._result_linkage,
-                                       self._num_predictions,
-                                       self._num_predictions + self._num_predictions - 2)
-        return result_order
+        return self._seriation(
+            self._result_linkage,
+            self._num_predictions,
+            self._num_predictions + self._num_predictions - 2,
+        )

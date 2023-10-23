@@ -53,8 +53,13 @@ class ConfigTools():
     @property
     def sections(self) -> List[str]:
         """ list: The sorted section names that exist within the convert Configuration options. """
-        return sorted(set(plugin.split(".")[0] for plugin in self._config.config.sections()
-                          if plugin.split(".")[0] != "writer"))
+        return sorted(
+            {
+                plugin.split(".")[0]
+                for plugin in self._config.config.sections()
+                if plugin.split(".")[0] != "writer"
+            }
+        )
 
     @property
     def plugins_dict(self) -> Dict[str, List[str]]:

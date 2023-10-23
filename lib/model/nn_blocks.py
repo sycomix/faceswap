@@ -130,7 +130,7 @@ class Conv2D(KConv2D):  # pylint:disable=too-few-public-methods, too-many-ancest
     """
     def __init__(self, *args, padding: str = "same", is_upscale: bool = False, **kwargs) -> None:
         if kwargs.get("name", None) is None:
-            filters = kwargs["filters"] if "filters" in kwargs else args[0]
+            filters = kwargs.get("filters", args[0])
             kwargs["name"] = _get_name(f"conv2d_{filters}")
         initializer = _get_default_initializer(kwargs.pop("kernel_initializer", None))
         if is_upscale and _CONFIG["icnr_init"]:
@@ -570,7 +570,7 @@ class Upscale2xBlock():  # pylint:disable=too-few-public-methods
                                     scale_factor=self._scale_factor,
                                     activation=self._activation,
                                     **self._kwargs)(var_x)
-        if self._fast or (not self._fast and self._filters > 0):
+        if self._fast or self._filters > 0:
             var_x2 = Conv2D(self._filters, 3,
                             padding=self._padding,
                             is_upscale=True,

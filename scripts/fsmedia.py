@@ -129,12 +129,8 @@ class Alignments(AlignmentsBase):
             otherwise an empty dictionary
         """
         data: Dict[str, Any] = {}
-        if not self._is_extract and not self.have_alignments_file:
-            return data
         if not self._is_extract:
-            data = super()._load()
-            return data
-
+            return data if not self.have_alignments_file else super()._load()
         skip_existing = hasattr(self._args, 'skip_existing') and self._args.skip_existing
         skip_faces = hasattr(self._args, 'skip_faces') and self._args.skip_faces
 
@@ -142,7 +138,7 @@ class Alignments(AlignmentsBase):
             logger.debug("No skipping selected. Returning empty dictionary")
             return data
 
-        if not self.have_alignments_file and (skip_existing or skip_faces):
+        if not self.have_alignments_file:
             logger.warning("Skip Existing/Skip Faces selected, but no alignments file found!")
             return data
 
@@ -202,11 +198,11 @@ class Images():
         int
             The number of frames in the image source
         """
-        if self._is_video:
-            retval = int(count_frames(self._args.input_dir, fast=True))
-        else:
-            retval = len(self._input_images)
-        return retval
+        return (
+            int(count_frames(self._args.input_dir, fast=True))
+            if self._is_video
+            else len(self._input_images)
+        )
 
     def _check_input_folder(self) -> bool:
         """ Check whether the input is a folder or video.
@@ -222,11 +218,10 @@ class Images():
         if (os.path.isfile(self._args.input_dir) and
                 os.path.splitext(self._args.input_dir)[1].lower() in _video_extensions):
             logger.info("Input Video: %s", self._args.input_dir)
-            retval = True
+            return True
         else:
             logger.info("Input Directory: %s", self._args.input_dir)
-            retval = False
-        return retval
+            return False
 
     def _get_input_images(self) -> Union[str, List[str]]:
         """ Return the list of images or path to video file that is to be processed.
@@ -236,12 +231,11 @@ class Images():
         str or list
             Path to the video file if the input is a video otherwise list of image paths.
         """
-        if self._is_video:
-            input_images = self._args.input_dir
-        else:
-            input_images = get_image_paths(self._args.input_dir)
-
-        return input_images
+        return (
+            self._args.input_dir
+            if self._is_video
+            else get_image_paths(self._args.input_dir)
+        )
 
     def load(self) -> Generator[Tuple[str, np.ndarray], None, None]:
         """ Generator to load frames from a folder of images or from a video file.
@@ -254,8 +248,7 @@ class Images():
             A single frame
         """
         iterator = self._load_video_frames if self._is_video else self._load_disk_frames
-        for filename, image in iterator():
-            yield filename, image
+        yield from iterator()
 
     def _load_disk_frames(self) -> Generator[Tuple[str, np.ndarray], None, None]:
         """ Generator to load frames from a folder of images.
@@ -310,17 +303,15 @@ class Images():
 
         """
         logger.trace("Loading image: '%s'", filename)  # type:ignore[attr-defined]
-        if self._is_video:
-            if filename.isdigit():
-                frame_no = filename
-            else:
-                frame_no = os.path.splitext(filename)[0][filename.rfind("_") + 1:]
-                logger.trace(  # type:ignore[attr-defined]
-                    "Extracted frame_no %s from filename '%s'", frame_no, filename)
-            retval = self._load_one_video_frame(int(frame_no))
+        if not self._is_video:
+            return read_image(filename, raise_error=True)
+        if filename.isdigit():
+            frame_no = filename
         else:
-            retval = read_image(filename, raise_error=True)
-        return retval
+            frame_no = os.path.splitext(filename)[0][filename.rfind("_") + 1:]
+            logger.trace(  # type:ignore[attr-defined]
+                "Extracted frame_no %s from filename '%s'", frame_no, filename)
+        return self._load_one_video_frame(int(frame_no))
 
     def _load_one_video_frame(self, frame_no: int) -> np.ndarray:
         """ Obtain a single frame from a video file.

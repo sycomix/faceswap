@@ -378,8 +378,7 @@ class Model(ModelBase):
 
         # Create Autoencoder
         outputs = [decoders["a"], decoders["b"]]
-        autoencoder = KerasModel(inputs, outputs, name=self.model_name)
-        return autoencoder
+        return KerasModel(inputs, outputs, name=self.model_name)
 
     def _build_encoders(self, inputs: List[Tensor]) -> Dict[str, keras.models.Model]:
         """ Build the encoders for Phaze-A
@@ -738,9 +737,7 @@ class Encoder():  # pylint:disable=too-few-public-methods
         input_ = Input(shape=self._input_shape)
         var_x = input_
 
-        scaling = self._selected_model[0].scaling
-
-        if scaling:
+        if scaling := self._selected_model[0].scaling:
             #  Some models expect different scaling.
             logger.debug("Scaling to %s for '%s'", scaling, self._config["enc_architecture"])
             if scaling == (0, 255):
@@ -783,14 +780,12 @@ class Encoder():  # pylint:disable=too-few-public-methods
             The selected keras model for the chosen encoder architecture
         """
         model, kwargs = self._selected_model
-        if model.keras_name:
-            kwargs["input_shape"] = self._input_shape
-            kwargs["include_top"] = False
-            kwargs["weights"] = "imagenet" if self._config["enc_load_weights"] else None
-            retval = getattr(kapp, model.keras_name)(**kwargs)
-        else:
-            retval = _EncoderFaceswap(self._config)
-        return retval
+        if not model.keras_name:
+            return _EncoderFaceswap(self._config)
+        kwargs["input_shape"] = self._input_shape
+        kwargs["include_top"] = False
+        kwargs["weights"] = "imagenet" if self._config["enc_load_weights"] else None
+        return getattr(kapp, model.keras_name)(**kwargs)
 
 
 class _EncoderFaceswap():  # pylint:disable=too-few-public-methods
@@ -1001,8 +996,7 @@ class FullyConnected():  # pylint:disable=too-few-public-methods
             var_x = Reshape((dim, dim, int(self._max_nodes / (dim ** 2))))(var_x)
             var_x = self._do_upsampling(var_x)
 
-            num_upscales = self._config["dec_upscales_in_fc"]
-            if num_upscales:
+            if num_upscales := self._config["dec_upscales_in_fc"]:
                 var_x = UpscaleBlocks(self._side,
                                       self._config,
                                       layer_indicies=(0, num_upscales))(var_x)
@@ -1224,8 +1218,7 @@ class UpscaleBlocks():  # pylint: disable=too-few-public-methods
             var_x = self._upscale_block(var_x, filts, skip_residual=skip_res)
             if self._config["learn_mask"]:
                 var_y = self._upscale_block(var_y, filts, is_mask=True)
-        retval = [var_x, var_y] if self._config["learn_mask"] else var_x
-        return retval
+        return [var_x, var_y] if self._config["learn_mask"] else var_x
 
 
 class GBlock():  # pylint:disable=too-few-public-methods

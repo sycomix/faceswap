@@ -195,11 +195,12 @@ class FacesDisplay():
         self._faces.dst = []
         destination = self.destination if self.destination else [np.ones_like(src.inbound.image)
                                                                  for src in self.source]
-        for idx, image in enumerate(destination):
-            self._faces.dst.append(transform_image(image,
-                                                   self._faces.matrix[idx],
-                                                   self._size,
-                                                   self._padding))
+        self._faces.dst.extend(
+            transform_image(
+                image, self._faces.matrix[idx], self._size, self._padding
+            )
+            for idx, image in enumerate(destination)
+        )
         logger.debug("Updated destination faces")
 
     def _header_text(self) -> np.ndarray:

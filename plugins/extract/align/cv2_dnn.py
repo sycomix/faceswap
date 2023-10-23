@@ -275,8 +275,7 @@ class Align(Aligner):
         """
         assert isinstance(self.model, cv2.dnn.Net)
         self.model.setInput(feed)
-        retval = self.model.forward()
-        return retval
+        return self.model.forward()
 
     def process_output(self, batch: BatchType) -> None:
         """ Process the output from the model

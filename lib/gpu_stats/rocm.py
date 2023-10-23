@@ -362,7 +362,7 @@ class ROCm(_GPUStats):
             if name or number:  # product_name or product_number populated
                 self._log("debug", f"Got name from product_name: '{name}', product_number: "
                                    f"'{number}'")
-                retval.append(f"{name + ' ' if name else ''}{number}")
+                retval.append(f"{f'{name} ' if name else ''}{number}")
                 continue
 
             device_id = self._from_sysfs_file(os.path.join(device, "device"))
@@ -394,8 +394,7 @@ class ROCm(_GPUStats):
             The list of device indices that are available for Faceswap to use
         """
         devices = super()._get_active_devices()
-        env_devices = os.environ.get("HIP_VISIBLE_DEVICES ")
-        if env_devices:
+        if env_devices := os.environ.get("HIP_VISIBLE_DEVICES "):
             new_devices = [int(i) for i in env_devices.split(",")]
             devices = [idx for idx in devices if idx in new_devices]
         self._log("debug", f"Active GPU Devices: {devices}")

@@ -445,7 +445,7 @@ def test_get_model__get(mocker: pytest_mock.MockerFixture,
         not model_exists and model._download_model.called)
     assert (model_exists and not model._unzip_model.called) or (
         not model_exists and model._unzip_model.called)
-    assert model_exists or not (model_exists and os_remove.called)
+    assert model_exists or not model_exists or not os_remove.called
     os_remove.reset_mock()
 
 
@@ -508,7 +508,7 @@ def test_get_model__write_zipfile(mocker: pytest_mock.MockerFixture,
     downloaded = 10 if dl_type == "complete" else 0
     response.getheader.return_value = 0
 
-    if dl_type in ("new", "continue"):
+    if dl_type in {"new", "continue"}:
         chunks = [32, 64, 128, 256, 512, 1024]
         data = [b"\x00" * size for size in chunks] + [b""]
         response.getheader.return_value = sum(chunks)

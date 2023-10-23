@@ -252,12 +252,13 @@ class PluginLoader():
             A list of the available training model plugin names
         """
         modelpath = os.path.join(os.path.dirname(__file__), "train", "model")
-        models = sorted(item.name.replace(".py", "").replace("_", "-")
-                        for item in os.scandir(modelpath)
-                        if not item.name.startswith("_")
-                        and not item.name.endswith("defaults.py")
-                        and item.name.endswith(".py"))
-        return models
+        return sorted(
+            item.name.replace(".py", "").replace("_", "-")
+            for item in os.scandir(modelpath)
+            if not item.name.startswith("_")
+            and not item.name.endswith("defaults.py")
+            and item.name.endswith(".py")
+        )
 
     @staticmethod
     def get_default_model() -> str:

@@ -110,8 +110,11 @@ class Identity(Extractor):  # pylint:disable=abstract-method
             The extract media to populate the detected face for
          """
         detected_face = DetectedFace()
-        meta = read_image_meta(item.filename).get("itxt", {}).get("alignments")
-        if meta:
+        if (
+            meta := read_image_meta(item.filename)
+            .get("itxt", {})
+            .get("alignments")
+        ):
             detected_face.from_png_meta(meta)
         item.add_detected_faces([detected_face])
         self._faces_per_filename[item.filename] += 1  # Track this added face
@@ -369,8 +372,7 @@ class IdentityFilter():
         """
         s_norm = np.linalg.norm(source_identities, axis=1)
         i_norm = np.linalg.norm(test_identity)
-        retval = source_identities @ test_identity / (s_norm * i_norm)
-        return retval
+        return source_identities @ test_identity / (s_norm * i_norm)
 
     def _get_matches(self,
                      filter_type: Literal["filter", "nfilter"],
@@ -475,12 +477,11 @@ class IdentityFilter():
             logger.trace("All faces already filtered: %s", sub_folders)  # type: ignore
             return faces
 
-        should_filter: List[np.ndarray] = []
-        for f_type in get_args(Literal["filter", "nfilter"]):
-            if not getattr(self, f"_{f_type}_enabled"):
-                continue
-            should_filter.append(self._get_matches(f_type, identities))
-
+        should_filter: List[np.ndarray] = [
+            self._get_matches(f_type, identities)
+            for f_type in get_args(Literal["filter", "nfilter"])
+            if getattr(self, f"_{f_type}_enabled")
+        ]
         # If any of the filter or nfilter evaluate to 'should filter' then filter out face
         final_filter: List[bool] = np.array(should_filter).max(axis=0).tolist()
         logger.trace("should_filter: %s, final_filter: %s",  # type: ignore

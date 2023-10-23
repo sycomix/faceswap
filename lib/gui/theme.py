@@ -195,18 +195,18 @@ class _Widgets():
         field_border: str
             The color of the input field's border
         """
-        # All the stock down arrow images are bad
-        images = {}
-        for state in ("active", "normal"):
-            images[f"arrow_{state}"] = self._images.get_image(
+        images = {
+            f"arrow_{state}": self._images.get_image(
                 (20, 20),
                 control_color if state == "normal" else active_color,
                 foreground=arrow_color,
                 pattern="arrow",
                 thickness=2,
                 border_width=1,
-                border_color=control_border)
-
+                border_color=control_border,
+            )
+            for state in ("active", "normal")
+        }
         self._style.element_create(f"{key}.Combobox.downarrow",
                                    "image",
                                    images["arrow_normal"],

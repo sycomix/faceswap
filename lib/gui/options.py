@@ -44,13 +44,14 @@ class CliOptions():
     @staticmethod
     def get_cli_classes(cli_source):
         """ Parse the cli scripts for the argument classes """
-        mod_classes = []
-        for name, obj in inspect.getmembers(cli_source):
-            if inspect.isclass(obj) and name.lower().endswith("args") \
-                    and name.lower() not in (("faceswapargs",
-                                              "extractconvertargs",
-                                              "guiargs")):
-                mod_classes.append(name)
+        mod_classes = [
+            name
+            for name, obj in inspect.getmembers(cli_source)
+            if inspect.isclass(obj)
+            and name.lower().endswith("args")
+            and name.lower()
+            not in (("faceswapargs", "extractconvertargs", "guiargs"))
+        ]
         logger.debug(mod_classes)
         return mod_classes
 
@@ -146,24 +147,22 @@ class CliOptions():
     def get_data_type(opt):
         """ Return a datatype for passing into control_helper.py to get the correct control """
         if opt.get("type", None) is not None and isinstance(opt["type"], type):
-            retval = opt["type"]
+            return opt["type"]
         elif opt.get("action", "") in ("store_true", "store_false"):
-            retval = bool
+            return bool
         else:
-            retval = str
-        return retval
+            return str
 
     @staticmethod
     def get_rounding(opt):
         """ Return rounding if correct data type, else None """
         dtype = opt.get("type", None)
         if dtype == float:
-            retval = opt.get("rounding", 2)
+            return opt.get("rounding", 2)
         elif dtype == int:
-            retval = opt.get("rounding", 1)
+            return opt.get("rounding", 1)
         else:
-            retval = None
-        return retval
+            return None
 
     def get_sysbrowser(self, option, options, command):
         """ Return the system file browser and file types if required else None """
@@ -177,12 +176,11 @@ class CliOptions():
                           actions.ContextFullPaths):
             return None
 
-        retval = {}
         action_option = None
         if option.get("action_option", None) is not None:
             self.expand_action_option(option, options)
             action_option = option["action_option"]
-        retval["filetypes"] = option.get("filetypes", "default")
+        retval = {"filetypes": option.get("filetypes", "default")}
         if action == actions.FileFullPaths:
             retval["browser"] = ["load"]
         elif action == actions.FilesFullPaths:
@@ -223,12 +221,18 @@ class CliOptions():
     def options_to_process(self, command=None):
         """ Return a consistent object for processing regardless of whether processing all commands
             or just one command for reset and clear. Removes helptext from return value """
-        if command is None:
-            options = [opt for opts in self.opts.values()
-                       for opt in opts.values() if isinstance(opt, dict)]
-        else:
-            options = [opt for opt in self.opts[command].values() if isinstance(opt, dict)]
-        return options
+        return (
+            [
+                opt
+                for opts in self.opts.values()
+                for opt in opts.values()
+                if isinstance(opt, dict)
+            ]
+            if command is None
+            else [
+                opt for opt in self.opts[command].values() if isinstance(opt, dict)
+            ]
+        )
 
     def reset(self, command=None):
         """ Reset the options for all or passed command
@@ -260,11 +264,11 @@ class CliOptions():
         for cmd, opts in self.opts.items():
             if command and command != cmd:
                 continue
-            cmd_dict = {}
-            for key, val in opts.items():
-                if not isinstance(val, dict):
-                    continue
-                cmd_dict[key] = val["cpanel_option"].get()
+            cmd_dict = {
+                key: val["cpanel_option"].get()
+                for key, val in opts.items()
+                if isinstance(val, dict)
+            }
             ctl_dict[cmd] = cmd_dict
         logger.debug("command: '%s', ctl_dict: %s", command, ctl_dict)
         return ctl_dict
@@ -272,10 +276,14 @@ class CliOptions():
     def get_one_option_variable(self, command, title):
         """ Return a single tk_var for the specified
             command and control_title """
-        for opt_title, option in self.gen_command_options(command):
-            if opt_title == title:
-                return option["cpanel_option"].tk_var
-        return None
+        return next(
+            (
+                option["cpanel_option"].tk_var
+                for opt_title, option in self.gen_command_options(command)
+                if opt_title == title
+            ),
+            None,
+        )
 
     def gen_cli_arguments(self, command):
         """ Return the generated cli arguments for the selected command """
@@ -288,7 +296,7 @@ class CliOptions():
                 output_dir = optval
             if command == "extract" and opt == "-b":               # Check for batch mode
                 batch_mode = optval
-            if optval in ("False", ""):
+            if optval in {"False", ""}:
                 continue
             if optval == "True":
                 yield (opt, )

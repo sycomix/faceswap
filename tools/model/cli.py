@@ -45,7 +45,8 @@ class ModelArgs(FaceSwapArgs):
                    "models cannot be used within Faceswap. See the 'format' option for specifying "
                    "the model output format."
                    "\nL|'nan-scan' - Scan the model file for NaNs or Infs (invalid data)."
-                   "\nL|'restore' - Restore a model from backup.")))
+                   "\nL|'restore' - Restore a model from backup."
+                   "\nL|'restore' action failed due to an error. Please check the backup files and try again.")))
         argument_list.append(dict(
             opts=("-f", "--format"),
             action=Radio,
@@ -67,3 +68,42 @@ class ModelArgs(FaceSwapArgs):
             help=_("Only used for 'inference' job. Generate the inference model for B -> A "
                    "instead of A -> B.")))
         return argument_list
+        argument_list.append(dict(
+            opts=("-f", "--format"),
+            action=Radio,
+            type=str,
+            choices=("h5", "saved-model"),
+            default="h5",
+            group=_("inference"),
+            help=_("R|The format to save the model as. Note: Only used for 'inference' job."
+                   "\nL|'h5' - Standard Keras H5 format. Does not store any custom layer "
+                   "information. Layers will need to be loaded from Faceswap to use."
+                   "\nL|'saved-model' - Tensorflow's Saved Model format. Contains all information "
+                   "required to load the model outside of Faceswap."
+                   "\nL|'h5' format is recommended for exporting the model for use in external applications.")))
+        argument_list.append(dict(
+            opts=("-f", "--format"),
+            action=Radio,
+            type=str,
+            choices=("h5", "saved-model"),
+            default="h5",
+            group=_("inference"),
+            help=_("R|The format to save the model as. Note: Only used for 'inference' job."
+                   "\nL|'h5' - Standard Keras H5 format. Does not store any custom layer "
+                   "information. Layers will need to be loaded from Faceswap to use."
+                   "\nL|'saved-model' - Tensorflow's Saved Model format. Contains all information "
+                   "required to load the model outside of Faceswap."
+                   "\nL|'h5' format is recommended for exporting the model for use in external applications.")))
+        argument_list.append(dict(
+            opts=("-f", "--format"),
+            action=Radio,
+            type=str,
+            choices=("h5", "saved-model"),
+            default="h5",
+            group=_("inference"),
+            help=_("R|The format to save the model as. Note: Only used for 'inference' job."
+                   "\nL|'h5' - Standard Keras H5 format. Does not store any custom layer "
+                   "information. Layers will need to be loaded from Faceswap to use."
+                   "\nL|'saved-model' - Tensorflow's Saved Model format. Contains all information "
+                   "required to load the model outside of Faceswap."
+                   "\nL|'h5' format is recommended for exporting the model for use in external applications.")))

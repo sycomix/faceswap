@@ -43,6 +43,8 @@ class Git():
             lines = stderr.decode("utf-8", errors="replace").splitlines()
         logger.debug("command: '%s', returncode: %s, success: %s, lines: %s",
                      cmd, retcode, success, lines)
+        if not success:
+            logger.error('Error in git command: %s', command)
         return success, lines
 
     def _check_available(self) -> bool:

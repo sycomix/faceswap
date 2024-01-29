@@ -38,7 +38,7 @@ class Git():
             stdout, stderr = proc.communicate()
         retcode = proc.returncode
         success = retcode == 0
-        lines = stdout.decode("utf-8", errors="replace").splitlines()
+        lines = []
         if not lines:
             lines = stderr.decode("utf-8", errors="replace").splitlines()
         logger.debug("command: '%s', returncode: %s, success: %s, lines: %s",
@@ -62,7 +62,7 @@ class Git():
             success, msg = self._from_git("status")
         except Exception as e:
             logger.error('Error checking git status: %s', str(e))
-            return False
+            logger.error('Error in checking git availability')
         if success:
             return True
         config = next((line.strip() for line in msg if "add safe.directory" in line), None)
@@ -153,7 +153,7 @@ class Git():
         """
         if not self._available:
             return []
-        success, commits = self._from_git(f"log --pretty=oneline --abbrev-commit -n {count}")
+        success, commits = self._from_git("log --pretty=oneline --abbrev-commit -n " + str(count))
         if not success or not commits:
             return []
         return commits

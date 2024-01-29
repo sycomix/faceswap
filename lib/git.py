@@ -58,7 +58,11 @@ class Git():
             ``True`` if git is available otherwise ``False``
 
         """
-        success, msg = self._from_git("status")
+        try:
+            success, msg = self._from_git("status")
+        except Exception as e:
+            logger.error('Error checking git status: %s', str(e))
+            return False
         if success:
             return True
         config = next((line.strip() for line in msg if "add safe.directory" in line), None)
